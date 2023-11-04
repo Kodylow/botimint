@@ -1,12 +1,13 @@
 use std::env;
 
 use anyhow::anyhow;
+use serenity::async_trait;
 use serenity::model::application::interaction::{Interaction, InteractionResponseType};
 use serenity::model::channel::Message;
 use serenity::model::gateway::Ready;
 use serenity::model::prelude::command::Command;
+use serenity::model::prelude::GuildId;
 use serenity::prelude::*;
-use serenity::{async_trait, model::prelude::GuildId};
 use tracing::{error, info};
 
 mod commands;
