@@ -1,16 +1,20 @@
-# Serenity Hello World Bot with Shuttle
+# Botimint: the Fedimint Development Bot
 
-In this example we will deploy a Serenity bot with Shuttle that responds to the `!hello` command with `world!`. To run this bot we need a valid Discord Token. To get started log in to the [Discord developer portal](https://discord.com/developers/applications).
+This project is a Fedimint development bot that uses the Fedimint client. It is built using the Serenity framework for Discord bots. The bot is designed to interact with users on the Fedimint Discord server, providing various commands and responses to Fedimint related things.
 
-1. Click the New Application button, name your application and click Create.
-2. Navigate to the Bot tab in the lefthand menu, and add a new bot.
-3. On the bot page click the Reset Token button to reveal your token. Put this token in your `Secrets.toml`. It's very important that you don't reveal your token to anyone, as it can be abused. Create a `.gitignore` file to omit your `Secrets.toml` from version control.
-4. For the sake of this example, you also need to scroll down on the bot page to the Message Content Intent section and enable that option.
+To run this bot, you will need a valid Discord Token. Follow these steps to get started:
 
-To add the bot to a server we need to create an invite link.
+1. Log in to the Discord developer portal.
+2. Click the New Application button, name your application, and click Create.
+3. Navigate to the Bot tab in the left-hand menu, and add a new bot.
+4. On the bot page, click the Reset Token button to reveal your token. Store this token in your .env file. Be careful not to reveal your token to anyone, as it can be misused.
 
-1. On your bot's application page, open the OAuth2 page via the lefthand panel.
-2. Go to the URL Generator via the lefthand panel, and select the `bot` scope as well as the `Send Messages` permission in the Bot Permissions section.
-3. Copy the URL, open it in your browser and select a Discord server you wish to invite the bot to.
+To add the bot to a server, create an invite link:
 
-For more information please refer to the [Discord docs](https://discord.com/developers/docs/getting-started) as well as the [Serenity repo](https://github.com/serenity-rs/serenity) for more examples.
+1. On your bot's application page, open the OAuth2 page via the left-hand panel.
+2. Go to the URL Generator via the left-hand panel, select the bot scope, and the Send Messages permission in the Bot Permissions section.
+3. Copy the URL, open it in your browser, and select a Discord server to invite the bot to.
+
+The bot's functionality is defined in the src/commands directory. Each command is defined in its own file, such as src/commands/welcome.rs for the welcome command.
+
+For more information, please refer to the Discord docs and the Serenity repo for more examples.
