@@ -7,7 +7,6 @@ use serenity::model::channel::Message;
 use serenity::model::gateway::Ready;
 use serenity::model::prelude::command::Command;
 use serenity::model::prelude::GuildId;
-use serenity::prelude::*;
 use tracing::{error, info};
 
 mod commands;
