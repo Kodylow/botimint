@@ -2,27 +2,32 @@ use std::env;
 use std::path::PathBuf;
 
 use anyhow::anyhow;
+use config::Config;
+use fedimint::Fedimint;
 use lightning::Cln;
+// use tracing::{error, info};
+use ln_gateway::GatewayRpcClient;
 use serenity::model::application::interaction::{Interaction, InteractionResponseType};
 use serenity::model::channel::Message;
 use serenity::model::gateway::Ready;
 use serenity::model::prelude::GuildId;
 use serenity::prelude::{Context, EventHandler, GatewayIntents};
 use serenity::{async_trait, Client};
-// use tracing::{error, info};
 
 mod commands;
+mod config;
+mod fedimint_local;
 mod lightning;
 mod utils;
 
-pub struct Bot {
+pub struct Botimint {
     reqwest_client: reqwest::Client,
     cln_client: Cln,
     guild_id: GuildId,
 }
 
 #[async_trait]
-impl EventHandler for Bot {
+impl EventHandler for Botimint {
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
         if let Interaction::ApplicationCommand(command) = interaction {
             println!("Received command interaction: {:#?}", command);
@@ -99,28 +104,6 @@ impl EventHandler for Bot {
         }
     }
 }
-
-struct Config {
-    guild_id: String,
-    discord_client_token: String,
-    cln_rpc_path: PathBuf,
-}
-
-impl Config {
-    fn from_env() -> Result<Self, env::VarError> {
-        dotenv::dotenv().ok();
-        let guild_id = env::var("GUILD_ID")?;
-        let discord_client_token = env::var("DISCORD_CLIENT_TOKEN")?;
-        let cln_rpc_path = PathBuf::from(env::var("CLN_RPC_PATH")?);
-
-        Ok(Self {
-            guild_id,
-            discord_client_token,
-            cln_rpc_path,
-        })
-    }
-}
-
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt::init();
@@ -129,17 +112,21 @@ async fn main() -> anyhow::Result<()> {
 
     let cln_client = Cln::new(&config.cln_rpc_path).await?;
 
+    let reqwest_client = reqwest::Client::new();
+
+    let fm_client = Fedimint::new().await;
+
     // Set gateway intents, which decides what events the bot will be notified about
     let intents = GatewayIntents::GUILD_MESSAGES
         | GatewayIntents::DIRECT_MESSAGES
         | GatewayIntents::MESSAGE_CONTENT;
 
-    // Create a new instance of the Client, logging in as a bot. This will
+    // Create a new instance of the Botimint Client, logging in as a bot. This will
     // automatically prepend your bot token with "Bot ", which is a requirement
     // by Discord for bot users.
-    let mut discord_client = Client::builder(&config.discord_client_token, intents)
-        .event_handler(Bot {
-            reqwest_client: reqwest::Client::new(),
+    let mut botimint = Client::builder(&config.discord_client_token, intents)
+        .event_handler(Botimint {
+            reqwest_client,
             cln_client,
             guild_id: GuildId(config.guild_id.parse().unwrap()),
         })
@@ -150,7 +137,7 @@ async fn main() -> anyhow::Result<()> {
     //
     // Shards will automatically attempt to reconnect, and will perform
     // exponential backoff until it reconnects.
-    if let Err(why) = discord_client.start().await {
+    if let Err(why) = botimint.start().await {
         println!("Client error: {:?}", why);
     }
 
