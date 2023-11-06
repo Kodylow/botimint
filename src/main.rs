@@ -1,20 +1,23 @@
 use std::env;
+use std::path::PathBuf;
 
 use anyhow::anyhow;
+use lightning::Cln;
 use serenity::model::application::interaction::{Interaction, InteractionResponseType};
 use serenity::model::channel::Message;
 use serenity::model::gateway::Ready;
-use serenity::model::prelude::command::Command;
 use serenity::model::prelude::GuildId;
 use serenity::prelude::{Context, EventHandler, GatewayIntents};
 use serenity::{async_trait, Client};
-use tracing::{error, info};
+// use tracing::{error, info};
 
 mod commands;
+mod lightning;
 mod utils;
 
-struct Bot {
-    client: reqwest::Client,
+pub struct Bot {
+    reqwest_client: reqwest::Client,
+    cln_client: Cln,
     guild_id: GuildId,
 }
 
@@ -69,13 +72,6 @@ impl EventHandler for Bot {
     async fn ready(&self, ctx: Context, ready: Ready) {
         println!("{} is connected!", ready.user.name);
 
-        let guild_id = GuildId(
-            env::var("GUILD_ID")
-                .expect("Expected GUILD_ID in environment")
-                .parse()
-                .expect("GUILD_ID must be an integer"),
-        );
-
         if let Err(e) =
             utils::create_and_log_command(&ctx.http, commands::wonderful_command::register).await
         {
@@ -107,6 +103,7 @@ impl EventHandler for Bot {
 struct Config {
     guild_id: String,
     discord_client_token: String,
+    cln_rpc_path: PathBuf,
 }
 
 impl Config {
@@ -114,10 +111,12 @@ impl Config {
         dotenv::dotenv().ok();
         let guild_id = env::var("GUILD_ID")?;
         let discord_client_token = env::var("DISCORD_CLIENT_TOKEN")?;
+        let cln_rpc_path = PathBuf::from(env::var("CLN_RPC_PATH")?);
 
         Ok(Self {
             guild_id,
             discord_client_token,
+            cln_rpc_path,
         })
     }
 }
@@ -128,6 +127,8 @@ async fn main() -> anyhow::Result<()> {
 
     let config = Config::from_env().map_err(|e| anyhow!("Error reading config: {}", e))?;
 
+    let cln_client = Cln::new(&config.cln_rpc_path).await?;
+
     // Set gateway intents, which decides what events the bot will be notified about
     let intents = GatewayIntents::GUILD_MESSAGES
         | GatewayIntents::DIRECT_MESSAGES
@@ -136,9 +137,10 @@ async fn main() -> anyhow::Result<()> {
     // Create a new instance of the Client, logging in as a bot. This will
     // automatically prepend your bot token with "Bot ", which is a requirement
     // by Discord for bot users.
-    let mut client = Client::builder(&config.discord_client_token, intents)
+    let mut discord_client = Client::builder(&config.discord_client_token, intents)
         .event_handler(Bot {
-            client: reqwest::Client::new(),
+            reqwest_client: reqwest::Client::new(),
+            cln_client,
             guild_id: GuildId(config.guild_id.parse().unwrap()),
         })
         .await
@@ -148,7 +150,7 @@ async fn main() -> anyhow::Result<()> {
     //
     // Shards will automatically attempt to reconnect, and will perform
     // exponential backoff until it reconnects.
-    if let Err(why) = client.start().await {
+    if let Err(why) = discord_client.start().await {
         println!("Client error: {:?}", why);
     }
 
