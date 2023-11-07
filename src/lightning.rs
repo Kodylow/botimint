@@ -13,8 +13,8 @@ impl Cln {
         Ok(Self(Arc::new(Mutex::new(client?))))
     }
 
-    pub async fn client_lock(&self) -> anyhow::Result<MappedMutexGuard<'_, ClnRpc>> {
-        let guard = self.0.lock().await;
-        Ok(MutexGuard::map(guard, |client| client))
-    }
+    // pub async fn client_lock(&self) -> anyhow::Result<MappedMutexGuard<'_,
+    // ClnRpc>> {     let guard = self.0.lock().await;
+    //     Ok(MutexGuard::map(guard, |client| client))
+    // }
 }
