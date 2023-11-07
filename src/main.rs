@@ -1,18 +1,9 @@
-
-
-
-
 use botimint::Botimint;
-
 use fedimint_local::Fedimint;
 use lightning::Cln;
-
-
-
 use serenity::model::prelude::GuildId;
-use serenity::prelude::{GatewayIntents};
-use serenity::{Client};
-
+use serenity::prelude::GatewayIntents;
+use serenity::Client;
 
 #[macro_use]
 extern crate lazy_static;
@@ -30,15 +21,20 @@ mod utils;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    tracing_subscriber::fmt::init();
+    let subscriber = tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::INFO)
+        .finish();
+
+    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
 
     let cln_client = Cln::new(&CONFIG.cln_rpc_path).await?;
+    tracing::info!("Connected to C-Lightning RPC at {:?}", &CONFIG.cln_rpc_path);
 
     let reqwest_client = reqwest::Client::new();
+    tracing::info!("Created new Reqwest HTTP client");
 
     let fm_client = Fedimint::new().await?;
-
-    println!(
+    tracing::info!(
         "Connected to Fedimint: {:?}",
         fm_client.client.federation_id()
     );
@@ -59,13 +55,14 @@ async fn main() -> anyhow::Result<()> {
         ))
         .await
         .expect("Err creating client");
+    tracing::info!("Created new Botimint client");
 
     // Finally, start a single shard, and start listening to events.
     //
     // Shards will automatically attempt to reconnect, and will perform
     // exponential backoff until it reconnects.
     if let Err(why) = botimint.start().await {
-        println!("Client error: {:?}", why);
+        tracing::error!("Client error: {:?}", why);
     }
 
     Ok(())

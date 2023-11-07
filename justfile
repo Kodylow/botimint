@@ -116,5 +116,9 @@ typos *PARAMS:
 typos-fix-all:
   just typos -w
 
-cln-mutiny:
+# Core Lightning Stuff
+cln-start:
   lightningd --lightning-dir=./.lightning --signet --disable-plugin bcli --fm-gateway-listen "127.0.0.1:3301"
+
+cln-stop:
+  lightning-cli --lightning-dir=./.lightning --signet stop

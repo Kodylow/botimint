@@ -54,7 +54,7 @@
             });
       in
       {
-        legacyPackages = outputs;
+        legacyPackages = outputs // { clightning = pkgs.clightning; };
         devShells = flakeboxLib.mkShells {
           nativeBuildInputs = [
             pkgs.pkg-config
