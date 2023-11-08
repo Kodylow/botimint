@@ -1,22 +1,32 @@
+use fedimint_client::ClientArc;
 use serenity::async_trait;
 use serenity::model::application::interaction::{Interaction, InteractionResponseType};
 use serenity::model::prelude::{GuildId, Message, Ready};
 use serenity::prelude::{Context, EventHandler};
+use tracing::{error, info};
 
+use crate::fedimint_local::Fedimint;
 use crate::lightning::Cln;
 use crate::{commands, utils};
 
 pub struct Botimint {
     reqwest_client: reqwest::Client,
     cln_client: Cln,
+    fm_client: Fedimint,
     guild_id: GuildId,
 }
 
 impl Botimint {
-    pub fn new(reqwest_client: reqwest::Client, cln_client: Cln, guild_id: GuildId) -> Botimint {
+    pub fn new(
+        reqwest_client: reqwest::Client,
+        cln_client: Cln,
+        fm_client: Fedimint,
+        guild_id: GuildId,
+    ) -> Botimint {
         Botimint {
             reqwest_client,
             cln_client,
+            fm_client,
             guild_id,
         }
     }
@@ -26,7 +36,7 @@ impl Botimint {
 impl EventHandler for Botimint {
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
         if let Interaction::ApplicationCommand(command) = interaction {
-            println!("Received command interaction: {:#?}", command);
+            info!("Received command interaction: {:#?}", command.data.name);
 
             let content = match command.data.name.as_str() {
                 "ping" => commands::ping::run(&command.data.options),
@@ -43,7 +53,7 @@ impl EventHandler for Botimint {
                 })
                 .await
             {
-                println!("Cannot respond to slash command: {}", why);
+                error!("Cannot respond to slash command: {}", why);
             }
         }
     }
@@ -59,7 +69,7 @@ impl EventHandler for Botimint {
             // channel, so log to stdout when some error happens, with a
             // description of it.
             if let Err(why) = msg.channel_id.say(&ctx.http, "Pong!").await {
-                println!("Error sending message: {:?}", why);
+                error!("Error sending message: {:?}", why);
             }
         }
     }
@@ -71,32 +81,32 @@ impl EventHandler for Botimint {
     //
     // In this case, just print what the current user's username is.
     async fn ready(&self, ctx: Context, ready: Ready) {
-        println!("{} is connected!", ready.user.name);
+        info!("{} is connected!", ready.user.name);
 
         if let Err(_e) =
             utils::create_and_log_command(&ctx.http, commands::wonderful_command::register).await
         {
-            println!("Error creating wonderful command");
+            error!("Error creating wonderful command");
         }
         if let Err(_e) =
             utils::create_and_log_command(&ctx.http, commands::numberinput::register).await
         {
-            println!("Error creating numberinput command");
+            error!("Error creating numberinput command");
         }
         if let Err(_e) = utils::create_and_log_command(&ctx.http, commands::ping::register).await {
-            println!("Error creating ping command");
+            error!("Error creating ping command");
         }
         if let Err(_e) =
             utils::create_and_log_command(&ctx.http, commands::attachmentinput::register).await
         {
-            println!("Error creating attachmentinput command");
+            error!("Error creating attachmentinput command");
         }
         if let Err(_e) = utils::create_and_log_command(&ctx.http, commands::id::register).await {
-            println!("Error creating id command");
+            error!("Error creating id command");
         }
         if let Err(_e) = utils::create_and_log_command(&ctx.http, commands::welcome::register).await
         {
-            println!("Error creating welcome command");
+            error!("Error creating welcome command");
         }
     }
 }

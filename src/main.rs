@@ -51,6 +51,7 @@ async fn main() -> anyhow::Result<()> {
         .event_handler(Botimint::new(
             reqwest_client,
             cln_client,
+            fm_client,
             GuildId(CONFIG.guild_id.parse().unwrap()),
         ))
         .await

@@ -117,8 +117,8 @@ typos-fix-all:
   just typos -w
 
 # Core Lightning Stuff
-cln-start:
+lightning:
   lightningd --lightning-dir=./.lightning --signet --disable-plugin bcli --fm-gateway-listen "127.0.0.1:3301"
 
-cln-stop:
+stop:
   lightning-cli --lightning-dir=./.lightning --signet stop

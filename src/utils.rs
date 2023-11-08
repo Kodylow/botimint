@@ -1,4 +1,5 @@
 use serenity::model::prelude::command::Command;
+use tracing::info;
 
 pub async fn create_and_log_command<F>(
     http: &serenity::http::Http,
@@ -12,9 +13,6 @@ where
         + Sync,
 {
     let command = Command::create_global_application_command(http, command_register).await?;
-    println!(
-        "I created the following global slash command: {:#?}",
-        command
-    );
+    info!("Created Slash Command: {:#?}", command.name);
     Ok(())
 }
