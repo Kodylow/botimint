@@ -58,8 +58,14 @@
         devShells = flakeboxLib.mkShells {
           nativeBuildInputs = [
             pkgs.pkg-config
+            pkgs.starship
+            pkgs.clightning
+            pkgs.just
           ];
           packages = [ ];
+          shellHook = ''
+              eval "$(starship init bash)"
+          '';
         };
       });
 }
