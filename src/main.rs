@@ -1,9 +1,10 @@
 use botimint::Botimint;
 use fedimint_local::Fedimint;
-use lightning::Cln;
 use serenity::model::prelude::GuildId;
 use serenity::prelude::GatewayIntents;
 use serenity::Client;
+
+use crate::lightning::new_cln;
 
 #[macro_use]
 extern crate lazy_static;
@@ -27,7 +28,7 @@ async fn main() -> anyhow::Result<()> {
 
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
 
-    let cln_client = Cln::new(&CONFIG.cln_rpc_path).await?;
+    let cln_client = new_cln(&CONFIG.cln_rpc_path).await?;
     tracing::info!("Connected to C-Lightning RPC at {:?}", &CONFIG.cln_rpc_path);
 
     let reqwest_client = reqwest::Client::new();

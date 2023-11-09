@@ -25,6 +25,7 @@ fedimint-wallet-client = { git = "https://github.com/fedimint/fedimint", branch 
 fedimint-mint-client = { git = "https://github.com/fedimint/fedimint", branch = "master" }
 fedimint-ln-client = { git = "https://github.com/fedimint/fedimint", branch = "master" }
 lazy_static = "1.4.0"
+serde_json = "1.0.108"
 
 
 [patch.crates-io]

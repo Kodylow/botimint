@@ -367,6 +367,7 @@ dependencies = [
  "lightning-invoice",
  "reqwest",
  "serde",
+ "serde_json",
  "serenity",
  "tokio",
  "tracing",
