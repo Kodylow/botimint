@@ -61,6 +61,7 @@
             pkgs.starship
             pkgs.clightning
             pkgs.just
+            pkgs.darwin.apple_sdk.frameworks.SystemConfiguration # TODO: remove this once I figure out how to get this without the hack
           ];
           packages = [ ];
           shellHook = ''
