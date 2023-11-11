@@ -7,42 +7,16 @@ use serenity::model::prelude::command::CommandOptionType;
 use serenity::model::prelude::interaction::application_command::CommandDataOption;
 use cln_rpc::model::requests::NewaddrAddresstype;
 use tokio::sync::Mutex;
+use crate::commands::discord_command_options_to_map;
+use crate::utils::option_utils::{ get_option_as, AddressString };
+
 use super::format_json;
-use crate::utils::get_option_as_string;
-
-trait AddressString {
-    fn to_string(&self) -> String;
-    fn from_string(s: &str) -> Self;
-}
-
-impl AddressString for NewaddrAddresstype {
-    fn to_string(&self) -> String {
-        (
-            match self {
-                NewaddrAddresstype::BECH32 => "bech32",
-                NewaddrAddresstype::P2TR => "p2tr",
-                NewaddrAddresstype::ALL => "all",
-                _ => "bech32",
-            }
-        ).to_string()
-    }
-
-    fn from_string(s: &str) -> Self {
-        match s {
-            "bech32" => NewaddrAddresstype::BECH32,
-            "p2tr" => NewaddrAddresstype::P2TR,
-            "all" => NewaddrAddresstype::ALL,
-            _ => NewaddrAddresstype::BECH32,
-        }
-    }
-}
 
 pub async fn run(options: &[CommandDataOption], cln_client: &Arc<Mutex<ClnRpc>>) -> String {
-    let addr_type = options
-        .get(0)
-        .and_then(|opt| get_option_as_string(opt.clone()))
-        .map(|s| AddressString::from_string(&s))
-        .unwrap();
+    let options_map = discord_command_options_to_map(options);
+    let addr_type: NewaddrAddresstype = get_option_as(&options_map, "address_type").unwrap_or(
+        NewaddrAddresstype::BECH32
+    );
 
     let req = cln_rpc::model::requests::NewaddrRequest {
         addresstype: Some(addr_type),
@@ -62,7 +36,7 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
         .description("Get a new address for on-chain deposits to this node")
         .create_option(|option| {
             option
-                .name("address")
+                .name("address_type")
                 .description("Address type")
                 .kind(CommandOptionType::String)
                 .required(true)

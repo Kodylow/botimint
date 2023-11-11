@@ -1,13 +1,31 @@
 use std::collections::HashMap;
 use std::str::FromStr;
+use cln_rpc::model::requests::NewaddrAddresstype;
 
 use anyhow::Result;
-use cln_rpc::primitives::{Amount, AmountOrAll, Feerate, Outpoint, PublicKey, Sha256};
+use cln_rpc::primitives::{ Amount, AmountOrAll, Feerate, Outpoint, PublicKey, Sha256 };
 use serde_json::Value;
 
 // Define a trait for types that can be created from an Option<Value>
-trait FromOptionValue: Sized {
+pub trait FromOptionValue: Sized {
     fn from_option_value(value: &Option<Value>) -> Result<Self, String>;
+}
+
+pub trait AddressString {
+    fn to_string(&self) -> String;
+}
+
+impl AddressString for NewaddrAddresstype {
+    fn to_string(&self) -> String {
+        (
+            match self {
+                NewaddrAddresstype::BECH32 => "bech32",
+                NewaddrAddresstype::P2TR => "p2tr",
+                NewaddrAddresstype::ALL => "all",
+                _ => "bech32",
+            }
+        ).to_string()
+    }
 }
 
 // Implement FromOptionValue for various types
@@ -75,9 +93,20 @@ impl FromOptionValue for AmountOrAll {
     }
 }
 
+impl FromOptionValue for NewaddrAddresstype {
+    fn from_option_value(value: &Option<Value>) -> Result<Self, String> {
+        match value.as_ref().and_then(|v| v.as_str()) {
+            Some("bech32") => Ok(NewaddrAddresstype::BECH32),
+            Some("p2tr") => Ok(NewaddrAddresstype::P2TR),
+            Some("all") => Ok(NewaddrAddresstype::ALL),
+            Some(_) => Err("Invalid value for address type".to_string()),
+            None => Err("No value provided".to_string()),
+        }
+    }
+}
+
 fn parse_amount<F, T>(value: &Option<Value>, constructor: F) -> Result<T, String>
-where
-    F: Fn(Amount) -> T,
+    where F: Fn(Amount) -> T
 {
     match value.as_ref().and_then(|v| v.as_str()) {
         Some(s) => {
@@ -119,8 +148,9 @@ impl FromOptionValue for Vec<Outpoint> {
                             return Err("Invalid outpoint format".to_string());
                         }
 
-                        let txid = Sha256::from_str(parts[0])
-                            .map_err(|_| format!("Failed to parse txid {} as Sha256", parts[0]))?;
+                        let txid = Sha256::from_str(parts[0]).map_err(|_|
+                            format!("Failed to parse txid {} as Sha256", parts[0])
+                        )?;
                         let vout = parts[1]
                             .parse::<u32>()
                             .map_err(|_| "Failed to parse vout as u32".to_string())?;
@@ -152,9 +182,7 @@ impl FromOptionValue for Feerate {
 // Generalized get_option_as function
 pub fn get_option_as<T: FromOptionValue>(
     options_map: &HashMap<String, Option<Value>>,
-    key: &str,
+    key: &str
 ) -> Option<T> {
-    options_map
-        .get(key)
-        .and_then(|v| T::from_option_value(v).ok())
+    options_map.get(key).and_then(|v| T::from_option_value(v).ok())
 }
