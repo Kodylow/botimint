@@ -11,7 +11,7 @@ use super::format_json;
 use crate::utils::get_option_as_string;
 
 pub async fn run(options: &[CommandDataOption], cln_client: &Arc<Mutex<ClnRpc>>) -> String {
-    let opt_str = options
+    let addr_type = options
         .get(0)
         .and_then(|opt| get_option_as_string(opt.clone()))
         .map(|s| match s.as_str() {
@@ -23,7 +23,7 @@ pub async fn run(options: &[CommandDataOption], cln_client: &Arc<Mutex<ClnRpc>>)
         .unwrap_or(cln_rpc::model::requests::NewaddrAddresstype::BECH32);
 
     let req = cln_rpc::model::requests::NewaddrRequest {
-        addresstype: Some(opt_str),
+        addresstype: Some(addr_type),
     };
     let res = cln_client.lock().await.call(NewAddr(req)).await.unwrap();
 

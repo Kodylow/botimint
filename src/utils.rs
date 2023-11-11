@@ -26,3 +26,13 @@ pub fn get_option_as_string(option: CommandDataOption) -> Option<String> {
         None => None,
     }
 }
+
+pub fn get_option_as_bool(option: CommandDataOption) -> Option<bool> {
+    match option.resolved {
+        Some(resolved) => match resolved {
+            CommandDataOptionValue::Boolean(b) => Some(b),
+            _ => None,
+        },
+        None => None,
+    }
+}

@@ -40,6 +40,7 @@ enum Command {
     FederationId,
     ClnInfo,
     ClnListPeers,
+    ClnListFunds,
     // ClnGetConnectionString,
     ClnConnect,
     ClnNewAddr,
@@ -53,6 +54,7 @@ impl From<&str> for Command {
             "federation_id" => Self::FederationId,
             "cln_info" => Self::ClnInfo,
             "cln_listpeers" => Self::ClnListPeers,
+            "cln_listfunds" => Self::ClnListFunds,
             // "cln_get_connection_string" => Self::ClnGetConnectionString,
             "cln_connect" => Self::ClnConnect,
             "cln_newaddr" => Self::ClnNewAddr,
@@ -73,6 +75,9 @@ impl EventHandler for Botimint {
                 Command::ClnInfo => cln::info::run(&command.data.options, &self.cln_client).await,
                 Command::ClnListPeers => {
                     cln::listpeers::run(&command.data.options, &self.cln_client).await
+                }
+                Command::ClnListFunds => {
+                    cln::listfunds::run(&command.data.options, &self.cln_client).await
                 }
                 // Command::ClnGetConnectionString => {
                 //     cln::get_connection_string::run(&command.data.options,
@@ -127,6 +132,7 @@ impl EventHandler for Botimint {
         utils::create_and_log_command(&ctx.http, fm::id::register).await;
         utils::create_and_log_command(&ctx.http, cln::info::register).await;
         utils::create_and_log_command(&ctx.http, cln::listpeers::register).await;
+        utils::create_and_log_command(&ctx.http, cln::listfunds::register).await;
         utils::create_and_log_command(&ctx.http, cln::connect::register).await;
         utils::create_and_log_command(&ctx.http, cln::newaddr::register).await;
 
