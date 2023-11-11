@@ -11,6 +11,7 @@ pub mod listfunds;
 pub mod listpeers;
 pub mod newaddr;
 pub mod pay;
+pub mod sendpay;
 pub mod withdraw;
 
 fn format_json(res: cln_rpc::Response) -> String {
