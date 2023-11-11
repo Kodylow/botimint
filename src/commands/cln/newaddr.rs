@@ -10,6 +10,22 @@ use tokio::sync::Mutex;
 use super::format_json;
 use crate::utils::get_option_as_string;
 
+enum AddressType {
+    Bech32,
+    P2tr,
+    All
+}
+
+impl AddressType {
+    fn as_str(&self) -> &'static str {
+        match self {
+            AddressType::Bech32 => "bech32",
+            AddressType::P2tr => "p2tr",
+            AddressType::All => "all"
+        }
+    }
+}
+
 pub async fn run(options: &[CommandDataOption], cln_client: &Arc<Mutex<ClnRpc>>) -> String {
     let addr_type = options
         .get(0)
@@ -31,13 +47,36 @@ pub async fn run(options: &[CommandDataOption], cln_client: &Arc<Mutex<ClnRpc>>)
 }
 
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
+    let mut options = HashMap::new();
+    options.insert(
+        AddressType::Bech32.as_str(),
+        CommandOptionType::String
+    );
+    options.insert(
+        AddressType::Bech32.as_str(),
+        CommandOptionType::String
+    );
+    options.insert(
+        AddressType::Bech32.as_str(),
+        CommandOptionType::String
+    );
     command
         .name("cln_newaddr")
         .description("Get a new address for on-chain deposits to this node")
-        .create_option(|opt| {
-            opt.name("addresstype")
-                .description("The type of address to generate: bech32, p2sh-segwit, or all")
-                .kind(CommandOptionType::String)
-                .required(false)
+        .create_options(|options_builder| {
+            for (name, type) in options.iter() {
+                options_builder.create_option(|opt| {
+                    opt.name(name)
+                        .description("The type of address to generate: bech32, p2sh-segwit, or all")
+                        .kind(type)
+                        .required(false)
+                });
+            }
         })
+        // .create_option(|opt| {
+        //     opt.name("addresstype")
+        //         .description("The type of address to generate: bech32, p2sh-segwit, or all")
+        //         .kind(CommandOptionType::String)
+        //         .required(false)
+        // })
 }
