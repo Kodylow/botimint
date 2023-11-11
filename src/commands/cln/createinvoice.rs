@@ -8,17 +8,19 @@ use serenity::model::prelude::interaction::application_command::CommandDataOptio
 use tokio::sync::Mutex;
 
 use super::format_json;
-use crate::utils::option_utils::get_option_as_string;
 
 pub async fn run(options: &[CommandDataOption], cln_client: &Arc<Mutex<ClnRpc>>) -> String {
-    let invstring = get_option_as_string(options[0].clone()).unwrap_or_default();
-    let label = get_option_as_string(options[1].clone()).unwrap_or_default();
-    let preimage = get_option_as_string(options[2].clone()).unwrap_or_default();
+    let options_map = crate::commands::discord_command_options_to_map(options);
+    let invstring: Option<String> =
+        crate::utils::option_utils::get_option_as(&options_map, "invstring");
+    let label: Option<String> = crate::utils::option_utils::get_option_as(&options_map, "label");
+    let preimage: Option<String> =
+        crate::utils::option_utils::get_option_as(&options_map, "preimage");
 
     let req = cln_rpc::model::requests::CreateinvoiceRequest {
-        invstring,
-        label,
-        preimage,
+        invstring: invstring.unwrap(),
+        label: label.unwrap(),
+        preimage: preimage.unwrap(),
     };
     match cln_client.lock().await.call(CreateInvoice(req)).await {
         Ok(res) => format_json(res),

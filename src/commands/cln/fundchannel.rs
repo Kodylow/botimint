@@ -1,16 +1,15 @@
-use std::collections::HashMap;
 use std::sync::Arc;
 
-use cln_rpc::primitives::{Amount, AmountOrAll, Outpoint, PublicKey};
+use cln_rpc::primitives::{Amount, AmountOrAll, Feerate, Outpoint, PublicKey};
 use cln_rpc::ClnRpc;
-use cln_rpc::Request::Fundchannel;
-use serde_json::json;
+use cln_rpc::Request::FundChannel;
 use serenity::builder::CreateApplicationCommand;
 use serenity::model::prelude::command::CommandOptionType;
 use serenity::model::prelude::interaction::application_command::CommandDataOption;
 use tokio::sync::Mutex;
 
 use super::format_json;
+use crate::commands::{discord_command_options_to_map, CommandOptionInfo};
 use crate::utils::option_utils::get_option_as;
 
 pub async fn run(options: &[CommandDataOption], cln_client: &Arc<Mutex<ClnRpc>>) -> String {
@@ -43,7 +42,7 @@ pub async fn run(options: &[CommandDataOption], cln_client: &Arc<Mutex<ClnRpc>>)
         reserve,
     };
 
-    match cln_client.lock().await.call(Fundchannel(req)).await {
+    match cln_client.lock().await.call(FundChannel(req)).await {
         Ok(res) => format_json(res),
         Err(e) => format!("Error: {}", e),
     }

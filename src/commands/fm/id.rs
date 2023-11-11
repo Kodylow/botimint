@@ -6,7 +6,7 @@ use serenity::model::prelude::interaction::application_command::{
 
 pub fn run(options: &[CommandDataOption]) -> String {
     let option = options
-        .get(0)
+        .first()
         .expect("Expected user option")
         .resolved
         .as_ref()

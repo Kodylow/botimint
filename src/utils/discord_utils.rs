@@ -1,9 +1,3 @@
-use std::collections::HashMap;
-use std::str::FromStr;
-
-use anyhow::Result;
-use cln_rpc::primitives::{Amount, Feerate, Outpoint, PublicKey, Sha256};
-use serde_json::Value;
 use serenity::model::prelude::command::Command;
 use tracing::info;
 

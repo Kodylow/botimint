@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::str::FromStr;
 use std::sync::Arc;
 
@@ -6,7 +5,6 @@ use anyhow::Result;
 use cln_rpc::primitives::PublicKey;
 use cln_rpc::ClnRpc;
 use cln_rpc::Request::Connect;
-use serde_json::Value;
 use serenity::builder::CreateApplicationCommand;
 use serenity::model::prelude::command::CommandOptionType;
 use serenity::model::prelude::interaction::application_command::CommandDataOption;
@@ -54,7 +52,7 @@ pub async fn run(options: &[CommandDataOption], cln_client: &Arc<Mutex<ClnRpc>>)
             format_json(res)
         }
         Err(e) => {
-            return format!("Error: {}", e);
+            format!("Error: {}", e)
         }
     }
 }

@@ -8,10 +8,11 @@ use serenity::model::prelude::interaction::application_command::CommandDataOptio
 use tokio::sync::Mutex;
 
 use super::format_json;
+use crate::commands::{discord_command_options_to_map, CommandOptionInfo};
 use crate::utils::option_utils::get_option_as;
 
 pub async fn run(options: &[CommandDataOption], cln_client: &Arc<Mutex<ClnRpc>>) -> String {
-    let options_map = super::discord_command_options_to_map(options);
+    let options_map = discord_command_options_to_map(options);
     let spent: bool = get_option_as(&options_map, "spent").unwrap_or(false);
     let req = cln_rpc::model::requests::ListfundsRequest { spent: Some(spent) };
     let res = cln_client.lock().await.call(ListFunds(req)).await.unwrap();

@@ -1,16 +1,11 @@
-use anyhow;
 use anyhow::Result;
-
-
 use fedimint_client::{ClientArc, FederationInfo};
-
 use fedimint_core::db::mem_impl::MemDatabase;
-use fedimint_ln_client::{LightningClientGen};
-use fedimint_mint_client::{MintClientGen};
+use fedimint_ln_client::LightningClientGen;
+use fedimint_mint_client::MintClientGen;
+// use fedimint_ln_client::{LightningClientGen};
+// use fedimint_mint_client::{MintClientGen};
 use fedimint_wallet_client::WalletClientGen;
-
-
-
 
 use crate::CONFIG;
 
