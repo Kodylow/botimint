@@ -1,3 +1,10 @@
+use std::collections::HashMap;
+use std::str::FromStr;
+
+use anyhow::Result;
+use cln_rpc::primitives::{Amount, AmountOrAll, Feerate, Outpoint, PublicKey, Sha256};
+use serde_json::Value;
+
 // Define a trait for types that can be created from an Option<Value>
 trait FromOptionValue: Sized {
     fn from_option_value(value: &Option<Value>) -> Result<Self, String>;
@@ -107,12 +114,13 @@ impl FromOptionValue for Vec<Outpoint> {
 
                 for val in arr {
                     if let Value::String(s) = val {
-                        let parts: Vec<&str> = s.split(":").collect();
+                        let parts: Vec<&str> = s.split(':').collect();
                         if parts.len() != 2 {
                             return Err("Invalid outpoint format".to_string());
                         }
 
-                        let txid = Sha256::from_str(parts[0])?;
+                        let txid = Sha256::from_str(parts[0])
+                            .map_err(|_| format!("Failed to parse txid {} as Sha256", parts[0]))?;
                         let vout = parts[1]
                             .parse::<u32>()
                             .map_err(|_| "Failed to parse vout as u32".to_string())?;
@@ -140,6 +148,7 @@ impl FromOptionValue for Feerate {
     }
 }
 
+#[allow(private_bounds)]
 // Generalized get_option_as function
 pub fn get_option_as<T: FromOptionValue>(
     options_map: &HashMap<String, Option<Value>>,

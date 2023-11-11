@@ -12,7 +12,7 @@ use tracing::{error, info};
 
 use crate::commands::{cln, fm, ping};
 use crate::fedimint_local::Fedimint;
-use crate::utils::option_utils;
+use crate::utils::discord_utils::create_and_log_command;
 
 // Botimint Structure
 #[allow(dead_code)]
@@ -49,8 +49,9 @@ enum Command {
     ClnListPeers,
     ClnListFunds,
     ClnConnect,
-    ClnNewAddr,
+    // ClnNewAddr,
     ClnCreateInvoice,
+    ClnFundChannel,
     Unknown,
 }
 
@@ -63,8 +64,9 @@ impl From<&str> for Command {
             "cln_listpeers" => Self::ClnListPeers,
             "cln_listfunds" => Self::ClnListFunds,
             "cln_connect" => Self::ClnConnect,
-            "cln_newaddr" => Self::ClnNewAddr,
+            // "cln_newaddr" => Self::ClnNewAddr,
             "cln_createinvoice" => Self::ClnCreateInvoice,
+            "cln_fundchannel" => Self::ClnFundChannel,
             _ => Self::Unknown,
         }
     }
@@ -102,14 +104,16 @@ impl EventHandler for Botimint {
 
     async fn ready(&self, ctx: Context, ready: Ready) {
         info!("{} is connected!", ready.user.name);
-        str::create_and_log_command(&ctx.http, ping::register).await;
-        str::create_and_log_command(&ctx.http, fm::id::register).await;
-        str::create_and_log_command(&ctx.http, cln::info::register).await;
-        str::create_and_log_command(&ctx.http, cln::listpeers::register).await;
-        str::create_and_log_command(&ctx.http, cln::listfunds::register).await;
-        str::create_and_log_command(&ctx.http, cln::connect::register).await;
-        str::create_and_log_command(&ctx.http, cln::newaddr::register).await;
-        str::create_and_log_command(&ctx.http, cln::createinvoice::register).await;
+        create_and_log_command(&ctx.http, ping::register).await;
+        create_and_log_command(&ctx.http, fm::id::register).await;
+        create_and_log_command(&ctx.http, cln::info::register).await;
+        create_and_log_command(&ctx.http, cln::listpeers::register).await;
+        create_and_log_command(&ctx.http, cln::listfunds::register).await;
+        create_and_log_command(&ctx.http, cln::connect::register).await;
+        // create_and_log_command(&ctx.http,
+        // cln::newaddr::register)     .await;
+        create_and_log_command(&ctx.http, cln::createinvoice::register).await;
+        create_and_log_command(&ctx.http, cln::fundchannel::register).await;
     }
 }
 
@@ -126,9 +130,13 @@ impl Botimint {
                 cln::listfunds::run(&command_data.options, &self.cln_client).await
             }
             Command::ClnConnect => cln::connect::run(&command_data.options, &self.cln_client).await,
-            Command::ClnNewAddr => cln::newaddr::run(&command_data.options, &self.cln_client).await,
+            // Command::ClnNewAddr => cln::newaddr::run(&command_data.options,
+            // &self.cln_client).await,
             Command::ClnCreateInvoice => {
                 cln::createinvoice::run(&command_data.options, &self.cln_client).await
+            }
+            Command::ClnFundChannel => {
+                cln::fundchannel::run(&command_data.options, &self.cln_client).await
             }
             Command::Unknown => "not implemented :(".to_string(),
         }
