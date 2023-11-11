@@ -126,6 +126,25 @@ impl FromOptionValue for String {
     }
 }
 
+impl FromOptionValue for Vec<String> {
+    fn from_option_value(value: &Option<Value>) -> Result<Self, String> {
+        match value {
+            Some(Value::Array(arr)) => {
+                let mut strings = Vec::new();
+                for val in arr {
+                    if let Value::String(s) = val {
+                        strings.push(s.clone());
+                    } else {
+                        return Err("Invalid value for Vec<String>".to_string());
+                    }
+                }
+                Ok(strings)
+            }
+            _ => Err("Invalid value for Vec<String>".to_string()),
+        }
+    }
+}
+
 impl FromOptionValue for bool {
     fn from_option_value(value: &Option<Value>) -> Result<Self, String> {
         value
@@ -151,6 +170,15 @@ impl FromOptionValue for u64 {
             .as_ref()
             .and_then(|v| v.as_u64())
             .ok_or_else(|| "Failed to parse as u64".to_string())
+    }
+}
+
+impl FromOptionValue for f64 {
+    fn from_option_value(value: &Option<Value>) -> Result<Self, String> {
+        value
+            .as_ref()
+            .and_then(|v| v.as_f64())
+            .ok_or_else(|| "Failed to parse as f64".to_string())
     }
 }
 

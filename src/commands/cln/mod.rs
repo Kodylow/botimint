@@ -2,7 +2,6 @@ use serde_json::json;
 
 pub mod connect;
 pub mod createinvoice;
-pub mod deposit;
 pub mod fundchannel;
 pub mod get_connection_string;
 pub mod info;

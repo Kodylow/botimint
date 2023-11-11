@@ -36,7 +36,7 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
             opt.name("invstring")
                 .description("The invoice string in bolt11 form")
                 .kind(CommandOptionType::String)
-                .required(true)
+                .required(false)
         })
         .create_option(|opt| {
             opt.name("label")
