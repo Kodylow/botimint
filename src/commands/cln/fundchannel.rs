@@ -16,7 +16,7 @@ pub async fn run(options: &[CommandDataOption], cln_client: &Arc<Mutex<ClnRpc>>)
     let options_map = discord_command_options_to_map(options);
     let id: PublicKey = get_option_as(&options_map, "id").unwrap();
     let amount: AmountOrAll = get_option_as(&options_map, "amount").unwrap();
-    let feerate: Option<Feerate> = get_option_as(&options_map, "feerate");
+    let feerate: Feerate = get_option_as(&options_map, "feerate").unwrap_or(Feerate::PerKb(1000));
     let announce: Option<bool> = get_option_as(&options_map, "announce");
     let minconf: Option<u32> = get_option_as(&options_map, "minconf");
     let push_msat: Option<Amount> = get_option_as(&options_map, "push_msat");
@@ -30,7 +30,7 @@ pub async fn run(options: &[CommandDataOption], cln_client: &Arc<Mutex<ClnRpc>>)
     let req = cln_rpc::model::requests::FundchannelRequest {
         id,
         amount,
-        feerate,
+        feerate: Some(feerate),
         announce,
         minconf,
         push_msat,
