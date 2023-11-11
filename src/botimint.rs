@@ -55,6 +55,8 @@ enum Command {
     ClnSendPay,
     ClnPay,
     ClnPing,
+    ClnListChannels,
+    ClnAddGossip,
     Unknown,
 }
 
@@ -73,6 +75,8 @@ impl From<&str> for Command {
             "cln_sendpay" => Self::ClnSendPay,
             "cln_pay" => Self::ClnPay,
             "cln_ping" => Self::ClnPing,
+            "cln_listchannels" => Self::ClnListChannels,
+            "cln_addgossip" => Self::ClnAddGossip,
             _ => Self::Unknown,
         }
     }
@@ -122,6 +126,8 @@ impl EventHandler for Botimint {
         create_and_log_command(&ctx.http, cln::sendpay::register).await;
         create_and_log_command(&ctx.http, cln::pay::register).await;
         create_and_log_command(&ctx.http, cln::ping::register).await;
+        create_and_log_command(&ctx.http, cln::listchannels::register).await;
+        create_and_log_command(&ctx.http, cln::addgossip::register).await;
     }
 }
 
@@ -148,6 +154,12 @@ impl Botimint {
             Command::ClnSendPay => cln::sendpay::run(&command_data.options, &self.cln_client).await,
             Command::ClnPay => cln::pay::run(&command_data.options, &self.cln_client).await,
             Command::ClnPing => cln::ping::run(&command_data.options, &self.cln_client).await,
+            Command::ClnListChannels => {
+                cln::listchannels::run(&command_data.options, &self.cln_client).await
+            }
+            Command::ClnAddGossip => {
+                cln::addgossip::run(&command_data.options, &self.cln_client).await
+            }
             Command::Unknown => "not implemented :(".to_string(),
         }
     }

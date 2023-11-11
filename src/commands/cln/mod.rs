@@ -1,11 +1,13 @@
 use serde_json::json;
 
+pub mod addgossip;
 pub mod connect;
 pub mod createinvoice;
 pub mod fundchannel;
 pub mod get_connection_string;
 pub mod info;
 pub mod invoice;
+pub mod listchannels;
 pub mod listfunds;
 pub mod listpeers;
 pub mod newaddr;
