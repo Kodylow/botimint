@@ -122,3 +122,6 @@ lightning:
 
 stop:
   lightning-cli --lightning-dir=./.lightning --signet stop
+
+alias:
+  alias lc="lightning-cli --lightning-dir=./.lightning --signet"

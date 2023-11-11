@@ -2,17 +2,17 @@ use std::sync::Arc;
 
 use cln_rpc::ClnRpc;
 use cln_rpc::Request::Getinfo;
-use serde_json::json;
 use serenity::builder::CreateApplicationCommand;
 use serenity::model::prelude::interaction::application_command::CommandDataOption;
 use tokio::sync::Mutex;
+
+use super::format_json;
 
 pub async fn run(_options: &[CommandDataOption], cln_client: &Arc<Mutex<ClnRpc>>) -> String {
     let req = cln_rpc::model::requests::GetinfoRequest {};
     let res = cln_client.lock().await.call(Getinfo(req)).await.unwrap();
 
-    let data = serde_json::to_string_pretty(&json!(res)).unwrap();
-    format!("```json\n{}\n```", data)
+    format_json(res)
 }
 
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {

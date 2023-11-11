@@ -365,6 +365,7 @@ dependencies = [
  "fedimint-wallet-client",
  "lazy_static",
  "lightning-invoice",
+ "regex",
  "reqwest",
  "serde",
  "serde_json",

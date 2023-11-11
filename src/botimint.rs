@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use cln_rpc::ClnRpc;
-use fedimint_client::ClientArc;
 use serenity::async_trait;
 use serenity::model::application::interaction::{Interaction, InteractionResponseType};
 use serenity::model::prelude::{GuildId, Message, Ready};
@@ -9,8 +8,9 @@ use serenity::prelude::{Context, EventHandler};
 use tokio::sync::Mutex;
 use tracing::{error, info};
 
+use crate::commands::{cln, fm, ping};
 use crate::fedimint_local::Fedimint;
-use crate::{commands, utils};
+use crate::utils;
 
 pub struct Botimint {
     reqwest_client: reqwest::Client,
@@ -25,12 +25,38 @@ impl Botimint {
         cln_client: Arc<Mutex<ClnRpc>>,
         fm_client: Fedimint,
         guild_id: GuildId,
-    ) -> Botimint {
-        Botimint {
+    ) -> Self {
+        Self {
             reqwest_client,
             cln_client,
             fm_client,
             guild_id,
+        }
+    }
+}
+
+enum Command {
+    Ping,
+    FederationId,
+    ClnInfo,
+    ClnListPeers,
+    // ClnGetConnectionString,
+    ClnConnect,
+    ClnNewAddr,
+    Unknown,
+}
+
+impl From<&str> for Command {
+    fn from(s: &str) -> Self {
+        match s {
+            "ping" => Self::Ping,
+            "federation_id" => Self::FederationId,
+            "cln_info" => Self::ClnInfo,
+            "cln_listpeers" => Self::ClnListPeers,
+            // "cln_get_connection_string" => Self::ClnGetConnectionString,
+            "cln_connect" => Self::ClnConnect,
+            "cln_newaddr" => Self::ClnNewAddr,
+            _ => Self::Unknown,
         }
     }
 }
@@ -41,34 +67,23 @@ impl EventHandler for Botimint {
         if let Interaction::ApplicationCommand(command) = interaction {
             info!("Received command interaction: {:#?}", command.data.name);
 
-            let content = match command.data.name.as_str() {
-                "ping" => commands::ping::run(&command.data.options),
-                "id" => commands::id::run(&command.data.options),
-                "federation_id" => commands::id::run(&command.data.options),
-                "cln_info" => {
-                    commands::cln::info::run(&command.data.options, &self.cln_client).await
+            let content = match Command::from(command.data.name.as_str()) {
+                Command::Ping => ping::run(&command.data.options),
+                Command::FederationId => fm::id::run(&command.data.options),
+                Command::ClnInfo => cln::info::run(&command.data.options, &self.cln_client).await,
+                Command::ClnListPeers => {
+                    cln::listpeers::run(&command.data.options, &self.cln_client).await
                 }
-                // "cln_connection_string" => {
-                //     commands::cln::connection_string::run(&command.data.options,
-                // &self.cln_client) }
-                // "cln_connect" => {
-                //     commands::cln::connect::run(&command.data.options, &self.cln_client)
-                // }
-                // "cln_balance" => {
-                //     commands::cln::balance::run(&command.data.options, &self.cln_client)
-                // }
-                // "cln_withdraw" => {
-                //     commands::cln::withdraw::run(&command.data.options, &self.cln_client)
-                // }
-                // "cln_deposit" => {
-                //     commands::cln::deposit::run(&command.data.options, &self.cln_client)
-                // }
-                // "cln_pay" => commands::cln::pay::run(&command.data.options, &self.cln_client),
-                // "cln_invoice" => {
-                //     commands::cln::invoice::run(&command.data.options, &self.cln_client)
-                // }
-                "attachmentinput" => commands::attachmentinput::run(&command.data.options),
-                _ => "not implemented :(".to_string(),
+                // Command::ClnGetConnectionString => {
+                //     cln::get_connection_string::run(&command.data.options,
+                // &self.cln_client).await }
+                Command::ClnConnect => {
+                    cln::connect::run(&command.data.options, &self.cln_client).await
+                }
+                Command::ClnNewAddr => {
+                    cln::newaddr::run(&command.data.options, &self.cln_client).await
+                }
+                Command::Unknown => "not implemented :(".to_string(),
             };
 
             if let Err(why) = command
@@ -108,36 +123,17 @@ impl EventHandler for Botimint {
     // In this case, just print what the current user's username is.
     async fn ready(&self, ctx: Context, ready: Ready) {
         info!("{} is connected!", ready.user.name);
+        utils::create_and_log_command(&ctx.http, ping::register).await;
+        utils::create_and_log_command(&ctx.http, fm::id::register).await;
+        utils::create_and_log_command(&ctx.http, cln::info::register).await;
+        utils::create_and_log_command(&ctx.http, cln::listpeers::register).await;
+        utils::create_and_log_command(&ctx.http, cln::connect::register).await;
+        utils::create_and_log_command(&ctx.http, cln::newaddr::register).await;
 
         // if let Err(_e) =
         //     utils::create_and_log_command(&ctx.http,
-        // commands::wonderful_command::register).await {
-        //     error!("Error creating wonderful command");
-        // }
-        // if let Err(_e) =
-        //     utils::create_and_log_command(&ctx.http,
-        // commands::numberinput::register).await {
-        //     error!("Error creating numberinput command");
-        // }
-        // if let Err(_e) = utils::create_and_log_command(&ctx.http,
-        // commands::ping::register).await {     error!("Error creating ping
-        // command"); }
-        if let Err(_e) =
-            utils::create_and_log_command(&ctx.http, commands::cln::info::register).await
-        {
-            error!("Error creating cln_info command");
-        }
-        // if let Err(_e) =
-        //     utils::create_and_log_command(&ctx.http,
-        // commands::attachmentinput::register).await {
-        //     error!("Error creating attachmentinput command");
-        // }
-        // if let Err(_e) = utils::create_and_log_command(&ctx.http,
-        // commands::id::register).await {     error!("Error creating id
-        // command"); }
-        // if let Err(_e) = utils::create_and_log_command(&ctx.http,
-        // commands::welcome::register).await {
-        //     error!("Error creating welcome command");
+        // cln::get_connection_string::register).await {
+        //     error!("Error creating cln_get_connection_string command");
         // }
     }
 }
