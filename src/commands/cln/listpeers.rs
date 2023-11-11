@@ -4,32 +4,19 @@ use std::sync::Arc;
 use cln_rpc::primitives::PublicKey;
 use cln_rpc::ClnRpc;
 use cln_rpc::Request::ListPeers;
-use serde_json::json;
 use serenity::builder::CreateApplicationCommand;
 use serenity::model::prelude::command::CommandOptionType;
 use serenity::model::prelude::interaction::application_command::CommandDataOption;
 use tokio::sync::Mutex;
 
 use super::format_json;
-use crate::utils::get_option_as_string;
+use crate::utils::option_utils::get_option_as;
 
 pub async fn run(options: &[CommandDataOption], cln_client: &Arc<Mutex<ClnRpc>>) -> String {
-    let mut id = None;
-    let mut level = None;
-    for option in options {
-        match option.name.as_str() {
-            "id" => {
-                id = match get_option_as_string(option.clone()) {
-                    Some(s) => Some(PublicKey::from_str(&s).unwrap()),
-                    None => None,
-                };
-            }
-            "level" => {
-                level = get_option_as_string(option.clone());
-            }
-            _ => {}
-        }
-    }
+    let options_map = super::discord_command_options_to_map(options);
+    let id: Option<PublicKey> = get_option_as(&options_map, "id");
+    let level: Option<String> = get_option_as(&options_map, "level");
+
     let req = cln_rpc::model::requests::ListpeersRequest { id, level };
     let res = cln_client.lock().await.call(ListPeers(req)).await.unwrap();
 

@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::str::FromStr;
 use std::sync::Arc;
 
@@ -5,14 +6,15 @@ use anyhow::Result;
 use cln_rpc::primitives::PublicKey;
 use cln_rpc::ClnRpc;
 use cln_rpc::Request::Connect;
-use serde_json::json;
+use serde_json::Value;
 use serenity::builder::CreateApplicationCommand;
 use serenity::model::prelude::command::CommandOptionType;
 use serenity::model::prelude::interaction::application_command::CommandDataOption;
 use tokio::sync::Mutex;
 
 use super::format_json;
-use crate::utils::get_option_as_string;
+use crate::commands::discord_command_options_to_map;
+use crate::utils::option_utils::get_option_as;
 
 struct ConnectionString {
     id: String,
@@ -32,15 +34,16 @@ impl ConnectionString {
         Ok(ConnectionString { id, host, port })
     }
 
-    fn to_string(&self) -> String {
-        format!("{}@{}:{}", self.id, self.host, self.port)
-    }
+    // fn to_string(&self) -> String {
+    //     format!("{}@{}:{}", self.id, self.host, self.port)
+    // }
 }
 
 pub async fn run(options: &[CommandDataOption], cln_client: &Arc<Mutex<ClnRpc>>) -> String {
-    let opt_str = get_option_as_string(options[0].clone()).unwrap_or_default();
+    let options_map = discord_command_options_to_map(options);
+    let connection_string: Option<String> = get_option_as(&options_map, "connection_string");
 
-    match ConnectionString::from_string(&opt_str) {
+    match ConnectionString::from_string(&connection_string.unwrap()) {
         Ok(cs) => {
             let req = cln_rpc::model::requests::ConnectRequest {
                 id: cs.id,

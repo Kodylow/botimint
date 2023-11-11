@@ -1,7 +1,5 @@
-use std::str::FromStr;
 use std::sync::Arc;
 
-use cln_rpc::primitives::PublicKey;
 use cln_rpc::ClnRpc;
 use cln_rpc::Request::ListFunds;
 use serenity::builder::CreateApplicationCommand;
@@ -10,13 +8,11 @@ use serenity::model::prelude::interaction::application_command::CommandDataOptio
 use tokio::sync::Mutex;
 
 use super::format_json;
-use crate::utils::get_option_as_bool;
+use crate::utils::option_utils::get_option_as;
 
 pub async fn run(options: &[CommandDataOption], cln_client: &Arc<Mutex<ClnRpc>>) -> String {
-    let spent = options
-        .get(0)
-        .and_then(|opt| get_option_as_bool(opt.clone()))
-        .unwrap_or(false);
+    let options_map = super::discord_command_options_to_map(options);
+    let spent: bool = get_option_as(&options_map, "spent").unwrap_or(false);
     let req = cln_rpc::model::requests::ListfundsRequest { spent: Some(spent) };
     let res = cln_client.lock().await.call(ListFunds(req)).await.unwrap();
 
@@ -24,13 +20,20 @@ pub async fn run(options: &[CommandDataOption], cln_client: &Arc<Mutex<ClnRpc>>)
 }
 
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
+    let option_info = CommandOptionInfo {
+        name: "spent",
+        description: "The ID of the peer",
+        kind: CommandOptionType::Boolean,
+        required: false,
+    };
+
     command
         .name("cln_listfunds")
         .description("Get funds info")
         .create_option(|opt| {
-            opt.name("spent")
-                .description("The ID of the peer")
-                .kind(CommandOptionType::Boolean)
-                .required(false)
+            opt.name(option_info.name)
+                .description(option_info.description)
+                .kind(option_info.kind)
+                .required(option_info.required)
         })
 }
