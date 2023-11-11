@@ -54,6 +54,7 @@ enum Command {
     ClnFundChannel,
     ClnSendPay,
     ClnPay,
+    ClnPing,
     Unknown,
 }
 
@@ -71,6 +72,7 @@ impl From<&str> for Command {
             "cln_fundchannel" => Self::ClnFundChannel,
             "cln_sendpay" => Self::ClnSendPay,
             "cln_pay" => Self::ClnPay,
+            "cln_ping" => Self::ClnPing,
             _ => Self::Unknown,
         }
     }
@@ -119,6 +121,7 @@ impl EventHandler for Botimint {
         create_and_log_command(&ctx.http, cln::fundchannel::register).await;
         create_and_log_command(&ctx.http, cln::sendpay::register).await;
         create_and_log_command(&ctx.http, cln::pay::register).await;
+        create_and_log_command(&ctx.http, cln::ping::register).await;
     }
 }
 
@@ -144,6 +147,7 @@ impl Botimint {
             }
             Command::ClnSendPay => cln::sendpay::run(&command_data.options, &self.cln_client).await,
             Command::ClnPay => cln::pay::run(&command_data.options, &self.cln_client).await,
+            Command::ClnPing => cln::ping::run(&command_data.options, &self.cln_client).await,
             Command::Unknown => "not implemented :(".to_string(),
         }
     }

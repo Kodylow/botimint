@@ -10,6 +10,7 @@ pub mod listfunds;
 pub mod listpeers;
 pub mod newaddr;
 pub mod pay;
+pub mod ping;
 pub mod sendpay;
 pub mod withdraw;
 
