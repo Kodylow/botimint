@@ -3,14 +3,14 @@ use std::sync::Arc;
 
 use cln_rpc::ClnRpc;
 use serenity::async_trait;
-use serenity::model::application::interaction::{ Interaction, InteractionResponseType };
+use serenity::model::application::interaction::{Interaction, InteractionResponseType};
 use serenity::model::prelude::application_command::CommandData;
 use serenity::model::prelude::*;
 use serenity::prelude::*;
 use tokio::sync::Mutex;
-use tracing::{ error, info };
+use tracing::{error, info};
 
-use crate::commands::{ cln, fm, ping };
+use crate::commands::{cln, fm, ping};
 use crate::fedimint_local::Fedimint;
 use crate::utils::discord_utils::create_and_log_command;
 
@@ -29,7 +29,7 @@ impl Botimint {
         reqwest_client: reqwest::Client,
         cln_client: Arc<Mutex<ClnRpc>>,
         fm_client: Fedimint,
-        guild_id: GuildId
+        guild_id: GuildId,
     ) -> Self {
         Self {
             reqwest_client,
@@ -52,6 +52,7 @@ enum Command {
     ClnNewAddr,
     ClnCreateInvoice,
     ClnFundChannel,
+    ClnSendPay,
     Unknown,
 }
 
@@ -67,6 +68,7 @@ impl From<&str> for Command {
             "cln_newaddr" => Self::ClnNewAddr,
             "cln_createinvoice" => Self::ClnCreateInvoice,
             "cln_fundchannel" => Self::ClnFundChannel,
+            "cln_sendpay" => Self::ClnSendPay,
             _ => Self::Unknown,
         }
     }
@@ -81,12 +83,13 @@ impl EventHandler for Botimint {
 
             let content = self.match_command(&command.data.name, &command.data).await;
 
-            if
-                let Err(why) = command.create_interaction_response(&ctx.http, |response| {
+            if let Err(why) = command
+                .create_interaction_response(&ctx.http, |response| {
                     response
                         .kind(InteractionResponseType::ChannelMessageWithSource)
                         .interaction_response_data(|message| message.content(content))
-                }).await
+                })
+                .await
             {
                 error!("Cannot respond to slash command: {}", why);
             }
@@ -112,6 +115,7 @@ impl EventHandler for Botimint {
         create_and_log_command(&ctx.http, cln::newaddr::register).await;
         create_and_log_command(&ctx.http, cln::createinvoice::register).await;
         create_and_log_command(&ctx.http, cln::fundchannel::register).await;
+        create_and_log_command(&ctx.http, cln::sendpay::register).await;
     }
 }
 
@@ -135,6 +139,7 @@ impl Botimint {
             Command::ClnFundChannel => {
                 cln::fundchannel::run(&command_data.options, &self.cln_client).await
             }
+            Command::ClnSendPay => cln::sendpay::run(&command_data.options, &self.cln_client).await,
             Command::Unknown => "not implemented :(".to_string(),
         }
     }

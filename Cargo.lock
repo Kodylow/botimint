@@ -363,6 +363,7 @@ dependencies = [
  "fedimint-ln-client",
  "fedimint-mint-client",
  "fedimint-wallet-client",
+ "hex",
  "lazy_static",
  "lightning-invoice",
  "regex",

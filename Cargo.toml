@@ -27,6 +27,7 @@ fedimint-ln-client = { git = "https://github.com/fedimint/fedimint", branch = "m
 lazy_static = "1.4.0"
 serde_json = "1.0.108"
 regex = "1.10.2"
+hex = "0.4.3"
 
 
 [patch.crates-io]

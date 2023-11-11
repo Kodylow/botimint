@@ -1,9 +1,11 @@
 use std::collections::HashMap;
 use std::str::FromStr;
-use cln_rpc::model::requests::NewaddrAddresstype;
 
 use anyhow::Result;
-use cln_rpc::primitives::{ Amount, AmountOrAll, Feerate, Outpoint, PublicKey, Sha256 };
+use cln_rpc::model::requests::{NewaddrAddresstype, SendpayRoute};
+use cln_rpc::primitives::{
+    Amount, AmountOrAll, Feerate, Outpoint, PublicKey, Secret, Sha256, ShortChannelId,
+};
 use serde_json::Value;
 
 // Define a trait for types that can be created from an Option<Value>
@@ -11,20 +13,105 @@ pub trait FromOptionValue: Sized {
     fn from_option_value(value: &Option<Value>) -> Result<Self, String>;
 }
 
-pub trait AddressString {
-    fn to_string(&self) -> String;
+impl FromOptionValue for Secret {
+    fn from_option_value(value: &Option<Value>) -> Result<Self, String> {
+        match value {
+            Some(Value::String(s)) => {
+                let bytes =
+                    hex::decode(s).map_err(|_| "Failed to decode hex string".to_string())?;
+                Secret::try_from(bytes).map_err(|_| "Failed to parse Secret".to_string())
+            }
+            _ => Err("Invalid value for Secret".to_string()),
+        }
+    }
 }
 
-impl AddressString for NewaddrAddresstype {
-    fn to_string(&self) -> String {
-        (
-            match self {
-                NewaddrAddresstype::BECH32 => "bech32",
-                NewaddrAddresstype::P2TR => "p2tr",
-                NewaddrAddresstype::ALL => "all",
-                _ => "bech32",
+impl FromOptionValue for Sha256 {
+    fn from_option_value(value: &Option<Value>) -> Result<Self, String> {
+        match value {
+            Some(Value::String(s)) => {
+                Sha256::from_str(s).map_err(|_| "Failed to parse Sha256".to_string())
             }
-        ).to_string()
+            _ => Err("Invalid value for Sha256".to_string()),
+        }
+    }
+}
+
+impl FromOptionValue for u16 {
+    fn from_option_value(value: &Option<Value>) -> Result<Self, String> {
+        match value {
+            Some(Value::Number(num)) => num
+                .as_u64()
+                .and_then(|v| v.try_into().ok())
+                .ok_or_else(|| "Failed to parse u16".to_string()),
+            _ => Err("Invalid value for u16".to_string()),
+        }
+    }
+}
+
+impl FromOptionValue for ShortChannelId {
+    fn from_option_value(value: &Option<Value>) -> Result<Self, String> {
+        match value {
+            Some(Value::String(s)) => ShortChannelId::from_str(s)
+                .map_err(|_| "Failed to parse ShortChannelId".to_string()),
+            _ => Err("Invalid value for ShortChannelId".to_string()),
+        }
+    }
+}
+
+impl FromOptionValue for Vec<SendpayRoute> {
+    fn from_option_value(value: &Option<Value>) -> Result<Self, String> {
+        match value {
+            Some(Value::Array(arr)) => {
+                let mut routes = Vec::new();
+                for val in arr {
+                    if let Value::Object(map) = val {
+                        let amount_msat = map
+                            .get("amount_msat")
+                            .ok_or_else(|| "amount_msat is missing".to_string())
+                            .and_then(|v| {
+                                Amount::from_option_value(&Some(v.clone()))
+                                    .map_err(|_| "Failed to parse amount_msat".to_string())
+                            })?;
+
+                        let id = map
+                            .get("id")
+                            .ok_or_else(|| "id is missing".to_string())
+                            .and_then(|v| {
+                                PublicKey::from_option_value(&Some(v.clone()))
+                                    .map_err(|_| "Failed to parse id".to_string())
+                            })?;
+
+                        let delay = map
+                            .get("delay")
+                            .ok_or_else(|| "delay is missing".to_string())
+                            .and_then(|v| {
+                                u16::from_option_value(&Some(v.clone()))
+                                    .map_err(|_| "Failed to parse delay".to_string())
+                            })?;
+
+                        let channel = map
+                            .get("channel")
+                            .ok_or_else(|| "channel is missing".to_string())
+                            .and_then(|v| {
+                                ShortChannelId::from_option_value(&Some(v.clone()))
+                                    .map_err(|_| "Failed to parse channel".to_string())
+                            })?;
+
+                        routes.push(SendpayRoute {
+                            amount_msat,
+                            id,
+                            delay,
+                            channel,
+                        });
+                    } else {
+                        return Err("Invalid value for SendpayRoute".to_string());
+                    }
+                }
+                Ok(routes)
+            }
+            _ => Err("Invalid value for Vec<SendpayRoute>".to_string()),
+        }
     }
 }
 
@@ -106,7 +193,8 @@ impl FromOptionValue for NewaddrAddresstype {
 }
 
 fn parse_amount<F, T>(value: &Option<Value>, constructor: F) -> Result<T, String>
-    where F: Fn(Amount) -> T
+where
+    F: Fn(Amount) -> T,
 {
     match value.as_ref().and_then(|v| v.as_str()) {
         Some(s) => {
@@ -148,9 +236,8 @@ impl FromOptionValue for Vec<Outpoint> {
                             return Err("Invalid outpoint format".to_string());
                         }
 
-                        let txid = Sha256::from_str(parts[0]).map_err(|_|
-                            format!("Failed to parse txid {} as Sha256", parts[0])
-                        )?;
+                        let txid = Sha256::from_str(parts[0])
+                            .map_err(|_| format!("Failed to parse txid {} as Sha256", parts[0]))?;
                         let vout = parts[1]
                             .parse::<u32>()
                             .map_err(|_| "Failed to parse vout as u32".to_string())?;
@@ -182,7 +269,24 @@ impl FromOptionValue for Feerate {
 // Generalized get_option_as function
 pub fn get_option_as<T: FromOptionValue>(
     options_map: &HashMap<String, Option<Value>>,
-    key: &str
+    key: &str,
 ) -> Option<T> {
-    options_map.get(key).and_then(|v| T::from_option_value(v).ok())
+    options_map
+        .get(key)
+        .and_then(|v| T::from_option_value(v).ok())
+}
+
+pub trait AddressString {
+    fn to_string(&self) -> String;
+}
+
+impl AddressString for NewaddrAddresstype {
+    fn to_string(&self) -> String {
+        (match self {
+            NewaddrAddresstype::BECH32 => "bech32",
+            NewaddrAddresstype::P2TR => "p2tr",
+            NewaddrAddresstype::ALL => "all",
+        })
+        .to_string()
+    }
 }
