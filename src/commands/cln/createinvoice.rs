@@ -15,10 +15,7 @@ pub async fn run(options: &[CommandDataOption], cln_client: &Arc<Mutex<ClnRpc>>)
         crate::utils::get_option_as::get_option_as(&options_map, "invstring");
     // random label if not provided
     let label: Option<String> = crate::utils::get_option_as::get_option_as(&options_map, "label")
-        .or(Some(format!(
-            "botimint-{}",
-            uuid::Uuid::new_v4().to_string()
-        )));
+        .or(Some(format!("botimint-{}", uuid::Uuid::new_v4())));
     let preimage: Option<String> =
         crate::utils::get_option_as::get_option_as(&options_map, "preimage");
 

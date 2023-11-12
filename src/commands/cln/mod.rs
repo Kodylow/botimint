@@ -142,39 +142,35 @@ pub async fn handle_run(
     cln_client: &Arc<Mutex<ClnRpc>>,
 ) -> String {
     match ClnCommand::from(command_name) {
-        ClnCommand::ClnInfo => info::run(&command_data.options, &cln_client).await,
-        ClnCommand::ClnListPeers => listpeers::run(&command_data.options, &cln_client).await,
-        ClnCommand::ClnListFunds => listfunds::run(&command_data.options, &cln_client).await,
-        ClnCommand::ClnConnect => connect::run(&command_data.options, &cln_client).await,
-        ClnCommand::ClnNewAddr => newaddr::run(&command_data.options, &cln_client).await,
-        ClnCommand::ClnCreateInvoice => {
-            createinvoice::run(&command_data.options, &cln_client).await
-        }
-        ClnCommand::ClnFundChannel => fundchannel::run(&command_data.options, &cln_client).await,
-        ClnCommand::ClnSendPay => sendpay::run(&command_data.options, &cln_client).await,
-        ClnCommand::ClnPay => pay::run(&command_data.options, &cln_client).await,
-        ClnCommand::ClnPing => ping::run(&command_data.options, &cln_client).await,
-        ClnCommand::ClnListChannels => listchannels::run(&command_data.options, &cln_client).await,
-        ClnCommand::ClnAddGossip => addgossip::run(&command_data.options, &cln_client).await,
-        ClnCommand::ClnAutoClean => autoclean::run(&command_data.options, &cln_client).await,
-        ClnCommand::ClnCheckMessage => checkmessage::run(&command_data.options, &cln_client).await,
-        ClnCommand::ClnClose => close::run(&command_data.options, &cln_client).await,
-        ClnCommand::ClnDatastore => datastore::run(&command_data.options, &cln_client).await,
-        ClnCommand::ClnCreateOnion => createonion::run(&command_data.options, &cln_client).await,
-        ClnCommand::ClnDelDatastore => deldatastore::run(&command_data.options, &cln_client).await,
+        ClnCommand::ClnInfo => info::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnListPeers => listpeers::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnListFunds => listfunds::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnConnect => connect::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnNewAddr => newaddr::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnCreateInvoice => createinvoice::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnFundChannel => fundchannel::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnSendPay => sendpay::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnPay => pay::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnPing => ping::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnListChannels => listchannels::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnAddGossip => addgossip::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnAutoClean => autoclean::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnCheckMessage => checkmessage::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnClose => close::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnDatastore => datastore::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnCreateOnion => createonion::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnDelDatastore => deldatastore::run(&command_data.options, cln_client).await,
         ClnCommand::ClnDelExpiredInvoice => {
-            delexpiredinvoice::run(&command_data.options, &cln_client).await
+            delexpiredinvoice::run(&command_data.options, cln_client).await
         }
-        ClnCommand::ClnDelInvoice => delinvoice::run(&command_data.options, &cln_client).await,
-        ClnCommand::ClnInvoice => invoice::run(&command_data.options, &cln_client).await,
-        ClnCommand::ClnListDatastore => {
-            listdatastore::run(&command_data.options, &cln_client).await
-        }
-        ClnCommand::ClnListInvoices => listinvoices::run(&command_data.options, &cln_client).await,
-        ClnCommand::ClnSendOnion => sendonion::run(&command_data.options, &cln_client).await,
-        ClnCommand::ClnListSendPays => listsendpays::run(&command_data.options, &cln_client).await,
+        ClnCommand::ClnDelInvoice => delinvoice::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnInvoice => invoice::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnListDatastore => listdatastore::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnListInvoices => listinvoices::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnSendOnion => sendonion::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnListSendPays => listsendpays::run(&command_data.options, cln_client).await,
         ClnCommand::ClnListTransactions => {
-            listtransactions::run(&command_data.options, &cln_client).await
+            listtransactions::run(&command_data.options, cln_client).await
         }
         ClnCommand::Unknown => format!("Unknown command: {}", command_name),
     }

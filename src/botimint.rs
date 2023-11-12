@@ -46,10 +46,10 @@ impl EventHandler for Botimint {
 
             let content = match command.data.name.as_str() {
                 name if name.starts_with("cln_") => {
-                    cln::handle_run(&name, &command.data, &self.cln_client).await
+                    cln::handle_run(name, &command.data, &self.cln_client).await
                 }
                 name if name.starts_with("fm_") => {
-                    fm::handle_run(&name, &command.data, &self.fm_client).await
+                    fm::handle_run(name, &command.data, &self.fm_client).await
                 }
                 _ => ping::run(),
             };
