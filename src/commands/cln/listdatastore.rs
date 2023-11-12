@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use cln_rpc::ClnRpc;
-use cln_rpc::Request::DelDatastore;
+use cln_rpc::Request::ListDatastore;
 use serenity::builder::CreateApplicationCommand;
 use serenity::model::prelude::command::CommandOptionType;
 use serenity::model::prelude::interaction::application_command::CommandDataOption;
@@ -13,36 +13,27 @@ use crate::utils::option_utils::get_option_as;
 
 pub async fn run(options: &[CommandDataOption], cln_client: &Arc<Mutex<ClnRpc>>) -> String {
     let options_map = discord_command_options_to_map(options);
-    let key: Vec<String> = get_option_as(&options_map, "key").unwrap();
-    let generation: Option<u64> = get_option_as(&options_map, "generation");
+    let key: Option<Vec<String>> = get_option_as(&options_map, "key");
 
-    let req = cln_rpc::model::requests::DeldatastoreRequest { key, generation };
+    let req = cln_rpc::model::requests::ListdatastoreRequest { key };
 
-    match cln_client.lock().await.call(DelDatastore(req)).await {
+    match cln_client.lock().await.call(ListDatastore(req)).await {
         Ok(res) => format_json(res),
         Err(e) => format!("Error: {}", e),
     }
 }
 
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
-    let options = vec![
-        CommandOptionInfo {
-            name: "key",
-            description: "The key hierarchy for the data",
-            kind: CommandOptionType::String,
-            required: true,
-        },
-        CommandOptionInfo {
-            name: "generation",
-            description: "The generation for atomic updates",
-            kind: CommandOptionType::Integer,
-            required: false,
-        },
-    ];
+    let options = vec![CommandOptionInfo {
+        name: "key",
+        description: "The key hierarchy for the data",
+        kind: CommandOptionType::String,
+        required: false,
+    }];
 
     command
-        .name("cln_deldatastore")
-        .description("Remove data from the Core Lightning database");
+        .name("cln_listdatastore")
+        .description("Fetch data from the Core Lightning database");
 
     for opt_info in options {
         command.create_option(|opt| {

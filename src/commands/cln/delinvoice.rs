@@ -1,7 +1,8 @@
 use std::sync::Arc;
 
+use cln_rpc::model::requests::DelinvoiceStatus;
 use cln_rpc::ClnRpc;
-use cln_rpc::Request::DelDatastore;
+use cln_rpc::Request::DelInvoice;
 use serenity::builder::CreateApplicationCommand;
 use serenity::model::prelude::command::CommandOptionType;
 use serenity::model::prelude::interaction::application_command::CommandDataOption;
@@ -13,12 +14,17 @@ use crate::utils::option_utils::get_option_as;
 
 pub async fn run(options: &[CommandDataOption], cln_client: &Arc<Mutex<ClnRpc>>) -> String {
     let options_map = discord_command_options_to_map(options);
-    let key: Vec<String> = get_option_as(&options_map, "key").unwrap();
-    let generation: Option<u64> = get_option_as(&options_map, "generation");
+    let label: String = get_option_as(&options_map, "label").unwrap();
+    let status: DelinvoiceStatus = get_option_as(&options_map, "status").unwrap();
+    let desconly: Option<bool> = get_option_as(&options_map, "desconly");
 
-    let req = cln_rpc::model::requests::DeldatastoreRequest { key, generation };
+    let req = cln_rpc::model::requests::DelinvoiceRequest {
+        label,
+        status,
+        desconly,
+    };
 
-    match cln_client.lock().await.call(DelDatastore(req)).await {
+    match cln_client.lock().await.call(DelInvoice(req)).await {
         Ok(res) => format_json(res),
         Err(e) => format!("Error: {}", e),
     }
@@ -27,22 +33,28 @@ pub async fn run(options: &[CommandDataOption], cln_client: &Arc<Mutex<ClnRpc>>)
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
     let options = vec![
         CommandOptionInfo {
-            name: "key",
-            description: "The key hierarchy for the data",
+            name: "label",
+            description: "The label of the invoice",
             kind: CommandOptionType::String,
             required: true,
         },
         CommandOptionInfo {
-            name: "generation",
-            description: "The generation for atomic updates",
-            kind: CommandOptionType::Integer,
+            name: "status",
+            description: "The status of the invoice",
+            kind: CommandOptionType::String,
+            required: true,
+        },
+        CommandOptionInfo {
+            name: "desconly",
+            description: "Whether to only remove the description",
+            kind: CommandOptionType::Boolean,
             required: false,
         },
     ];
 
     command
-        .name("cln_deldatastore")
-        .description("Remove data from the Core Lightning database");
+        .name("cln_delinvoice")
+        .description("Remove an invoice or its description from the Core Lightning database");
 
     for opt_info in options {
         command.create_option(|opt| {

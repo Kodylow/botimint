@@ -2,9 +2,11 @@ use std::collections::HashMap;
 use std::str::FromStr;
 
 use anyhow::Result;
-use cln_rpc::model::requests::{CreateonionHops, DatastoreMode, NewaddrAddresstype, SendpayRoute};
+use cln_rpc::model::requests::{
+    CreateonionHops, DatastoreMode, DelinvoiceStatus, NewaddrAddresstype, SendpayRoute,
+};
 use cln_rpc::primitives::{
-    Amount, AmountOrAll, Feerate, Outpoint, PublicKey, Secret, Sha256, ShortChannelId,
+    Amount, AmountOrAll, AmountOrAny, Feerate, Outpoint, PublicKey, Secret, Sha256, ShortChannelId,
 };
 use serde_json::Value;
 
@@ -208,6 +210,16 @@ impl FromOptionValue for AmountOrAll {
     }
 }
 
+impl FromOptionValue for AmountOrAny {
+    fn from_option_value(value: &Option<Value>) -> Result<Self, String> {
+        match value.as_ref().and_then(|v| v.as_str()) {
+            Some("any") => Ok(AmountOrAny::Any),
+            Some(_) => parse_amount(value, AmountOrAny::Amount),
+            None => Err("No value provided".to_string()),
+        }
+    }
+}
+
 impl FromOptionValue for NewaddrAddresstype {
     fn from_option_value(value: &Option<Value>) -> Result<Self, String> {
         match value.as_ref().and_then(|v| v.as_str()) {
@@ -240,10 +252,10 @@ where
             } else if s.ends_with("msat") {
                 parse_with_suffix("msat", Amount::from_msat)
             } else {
-                // Default to sat if no specific suffix is found
+                // Default to msat if no specific suffix is found
                 s.parse::<u64>()
                     .map_err(|_| "Failed to parse as u64".to_string())
-                    .map(Amount::from_sat)
+                    .map(Amount::from_msat)
             };
             amount.map(constructor)
         }
@@ -377,6 +389,20 @@ impl FromOptionValue for Vec<CreateonionHops> {
                 Ok(hops)
             }
             _ => Err("Invalid value for Vec<CreateonionHops>".to_string()),
+        }
+    }
+}
+
+impl FromOptionValue for DelinvoiceStatus {
+    fn from_option_value(value: &Option<Value>) -> Result<Self, String> {
+        match value {
+            Some(Value::String(s)) => match s.as_str() {
+                "paid" => Ok(DelinvoiceStatus::PAID),
+                "expired" => Ok(DelinvoiceStatus::EXPIRED),
+                "unpaid" => Ok(DelinvoiceStatus::UNPAID),
+                _ => Err(format!("Invalid value for DelinvoiceStatus: {}", s)),
+            },
+            _ => Err("Invalid value for DelinvoiceStatus".to_string()),
         }
     }
 }

@@ -1,7 +1,5 @@
 use serde_json::json;
 
-use super::Command;
-
 pub mod addgossip;
 pub mod autoclean;
 pub mod checkmessage;
@@ -11,11 +9,14 @@ pub mod createinvoice;
 pub mod createonion;
 pub mod datastore;
 pub mod deldatastore;
+pub mod delexpiredinvoice;
+pub mod delinvoice;
 pub mod fundchannel;
 pub mod get_connection_string;
 pub mod info;
 pub mod invoice;
 pub mod listchannels;
+pub mod listdatastore;
 pub mod listfunds;
 pub mod listpeers;
 pub mod newaddr;

@@ -63,6 +63,10 @@ enum Command {
     ClnDatastore,
     ClnCreateOnion,
     ClnDelDatastore,
+    ClnDelExpiredInvoice,
+    ClnDelInvoice,
+    ClnInvoice,
+    ClnListDatastore,
     Unknown,
 }
 
@@ -89,6 +93,10 @@ impl From<&str> for Command {
             "cln_datastore" => Self::ClnDatastore,
             "cln_createonion" => Self::ClnCreateOnion,
             "cln_deldatastore" => Self::ClnDelDatastore,
+            "cln_delexpiredinvoice" => Self::ClnDelExpiredInvoice,
+            "cln_delinvoice" => Self::ClnDelInvoice,
+            "cln_invoice" => Self::ClnInvoice,
+            "cln_listdatastore" => Self::ClnListDatastore,
             _ => Self::Unknown,
         }
     }
@@ -148,6 +156,10 @@ impl EventHandler for Botimint {
             cln::datastore::register,
             cln::createonion::register,
             cln::deldatastore::register,
+            cln::delexpiredinvoice::register,
+            cln::delinvoice::register,
+            cln::invoice::register,
+            cln::listdatastore::register,
         ];
 
         for command in commands.iter() {
@@ -201,6 +213,16 @@ impl Botimint {
             Command::ClnDelDatastore => {
                 cln::deldatastore::run(&command_data.options, &self.cln_client).await
             }
+            Command::ClnDelExpiredInvoice => {
+                cln::delexpiredinvoice::run(&command_data.options, &self.cln_client).await
+            }
+            Command::ClnDelInvoice => {
+                cln::delinvoice::run(&command_data.options, &self.cln_client).await
+            }
+            Command::ClnListDatastore => {
+                cln::listdatastore::run(&command_data.options, &self.cln_client).await
+            }
+            Command::ClnInvoice => cln::invoice::run(&command_data.options, &self.cln_client).await,
             _ => "Unknown command".to_string(),
         }
     }
