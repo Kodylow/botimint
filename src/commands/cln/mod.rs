@@ -27,6 +27,7 @@ pub mod listchannels;
 pub mod listdatastore;
 pub mod listfunds;
 pub mod listinvoices;
+pub mod listnodes;
 pub mod listpeers;
 pub mod listsendpays;
 pub mod listtransactions;
@@ -35,6 +36,9 @@ pub mod pay;
 pub mod ping;
 pub mod sendonion;
 pub mod sendpay;
+pub mod waitanyinvoice;
+pub mod waitinvoice;
+pub mod waitsendpay;
 pub mod withdraw;
 
 pub enum ClnCommand {
@@ -64,6 +68,10 @@ pub enum ClnCommand {
     ClnSendOnion,
     ClnListSendPays,
     ClnListTransactions,
+    ClnListNodes,
+    ClnWaitAnyInvoice,
+    ClnWaitInvoice,
+    ClnWaitSendPay,
     Unknown,
 }
 
@@ -96,6 +104,10 @@ impl From<&str> for ClnCommand {
             "cln_sendonion" => Self::ClnSendOnion,
             "cln_listsendpays" => Self::ClnListSendPays,
             "cln_listtransactions" => Self::ClnListTransactions,
+            "cln_listnodes" => Self::ClnListNodes,
+            "cln_waitanyinvoice" => Self::ClnWaitAnyInvoice,
+            "cln_waitinvoice" => Self::ClnWaitInvoice,
+            "cln_waitsendpay" => Self::ClnWaitSendPay,
             _ => Self::Unknown,
         }
     }
@@ -129,6 +141,10 @@ pub async fn ready(ctx: &Context) {
         sendonion::register,
         listsendpays::register,
         listtransactions::register,
+        listnodes::register,
+        waitanyinvoice::register,
+        waitinvoice::register,
+        waitsendpay::register,
     ];
 
     for command in commands {
@@ -172,6 +188,12 @@ pub async fn handle_run(
         ClnCommand::ClnListTransactions => {
             listtransactions::run(&command_data.options, cln_client).await
         }
+        ClnCommand::ClnListNodes => listnodes::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnWaitAnyInvoice => {
+            waitanyinvoice::run(&command_data.options, cln_client).await
+        }
+        ClnCommand::ClnWaitInvoice => waitinvoice::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnWaitSendPay => waitsendpay::run(&command_data.options, cln_client).await,
         ClnCommand::Unknown => format!("Unknown command: {}", command_name),
     }
 }
