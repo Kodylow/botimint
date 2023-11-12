@@ -192,6 +192,29 @@ impl FromOptionValue for u32 {
     }
 }
 
+impl FromOptionValue for Vec<u32> {
+    fn from_option_value(value: &Option<Value>) -> Result<Self, String> {
+        match value {
+            Some(Value::Array(arr)) => {
+                let mut ints = Vec::new();
+                for val in arr {
+                    if let Value::Number(num) = val {
+                        ints.push(
+                            num.as_u64()
+                                .and_then(|v| v.try_into().ok())
+                                .ok_or_else(|| "Failed to parse u32".to_string())?,
+                        );
+                    } else {
+                        return Err("Invalid value for Vec<u32>".to_string());
+                    }
+                }
+                Ok(ints)
+            }
+            _ => Err("Invalid value for Vec<u32>".to_string()),
+        }
+    }
+}
+
 impl FromOptionValue for u64 {
     fn from_option_value(value: &Option<Value>) -> Result<Self, String> {
         value
@@ -278,7 +301,7 @@ where
             } else if s.ends_with("msat") {
                 parse_with_suffix("msat", Amount::from_msat)
             } else {
-                // Default to msat if no specific suffix is found
+                // Default to sat if no specific suffix is found
                 s.parse::<u64>()
                     .map_err(|_| "Failed to parse as u64".to_string())
                     .map(Amount::from_msat)

@@ -20,6 +20,7 @@ pub mod deldatastore;
 pub mod delexpiredinvoice;
 pub mod delinvoice;
 pub mod fundchannel;
+pub mod fundpsbt;
 pub mod get_connection_string;
 pub mod info;
 pub mod invoice;
@@ -37,6 +38,9 @@ pub mod pay;
 pub mod ping;
 pub mod sendonion;
 pub mod sendpay;
+pub mod sendpsbt;
+pub mod signpsbt;
+pub mod utxopsbt;
 pub mod waitanyinvoice;
 pub mod waitinvoice;
 pub mod waitsendpay;
@@ -75,6 +79,10 @@ pub enum ClnCommand {
     ClnWaitSendPay,
     ClnWithdraw,
     ClnKeySend,
+    ClnFundPsbt,
+    ClnSendPsbt,
+    ClnSignPsbt,
+    ClnUtxoPsbt,
     Unknown,
 }
 
@@ -113,6 +121,10 @@ impl From<&str> for ClnCommand {
             "cln_waitsendpay" => Self::ClnWaitSendPay,
             "cln_withdraw" => Self::ClnWithdraw,
             "cln_keysend" => Self::ClnKeySend,
+            "cln_fundpsbt" => Self::ClnFundPsbt,
+            "cln_sendpsbt" => Self::ClnSendPsbt,
+            "cln_signpsbt" => Self::ClnSignPsbt,
+            "cln_utxopsbt" => Self::ClnUtxoPsbt,
             _ => Self::Unknown,
         }
     }
@@ -152,6 +164,10 @@ pub async fn ready(ctx: &Context) {
         waitsendpay::register,
         withdraw::register,
         keysend::register,
+        fundpsbt::register,
+        sendpsbt::register,
+        signpsbt::register,
+        utxopsbt::register,
     ];
 
     for command in commands {
@@ -203,6 +219,10 @@ pub async fn handle_run(
         ClnCommand::ClnWaitSendPay => waitsendpay::run(&command_data.options, cln_client).await,
         ClnCommand::ClnWithdraw => withdraw::run(&command_data.options, cln_client).await,
         ClnCommand::ClnKeySend => keysend::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnFundPsbt => fundpsbt::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnSendPsbt => sendpsbt::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnSignPsbt => signpsbt::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnUtxoPsbt => utxopsbt::run(&command_data.options, cln_client).await,
         ClnCommand::Unknown => format!("Unknown command: {}", command_name),
     }
 }
