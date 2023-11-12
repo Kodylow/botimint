@@ -3,7 +3,8 @@ use std::str::FromStr;
 
 use anyhow::Result;
 use cln_rpc::model::requests::{
-    CreateonionHops, DatastoreMode, DelinvoiceStatus, NewaddrAddresstype, SendpayRoute,
+    CreateonionHops, DatastoreMode, DelinvoiceStatus, ListinvoicesIndex, ListsendpaysStatus,
+    NewaddrAddresstype, SendonionFirst_hop, SendpayRoute,
 };
 use cln_rpc::primitives::{
     Amount, AmountOrAll, AmountOrAny, Feerate, Outpoint, PublicKey, Secret, Sha256, ShortChannelId,
@@ -24,6 +25,30 @@ impl FromOptionValue for Secret {
                 Secret::try_from(bytes).map_err(|_| "Failed to parse Secret".to_string())
             }
             _ => Err("Invalid value for Secret".to_string()),
+        }
+    }
+}
+
+impl FromOptionValue for Vec<Secret> {
+    fn from_option_value(value: &Option<Value>) -> Result<Self, String> {
+        match value {
+            Some(Value::Array(arr)) => {
+                let mut secrets = Vec::new();
+                for val in arr {
+                    if let Value::String(s) = val {
+                        let bytes = hex::decode(s)
+                            .map_err(|_| "Failed to decode hex string".to_string())?;
+                        secrets.push(
+                            Secret::try_from(bytes)
+                                .map_err(|_| "Failed to parse Secret".to_string())?,
+                        );
+                    } else {
+                        return Err("Invalid value for Vec<Secret>".to_string());
+                    }
+                }
+                Ok(secrets)
+            }
+            _ => Err("Invalid value for Vec<Secret>".to_string()),
         }
     }
 }
@@ -407,6 +432,72 @@ impl FromOptionValue for DelinvoiceStatus {
     }
 }
 
+impl FromOptionValue for ListinvoicesIndex {
+    fn from_option_value(value: &Option<Value>) -> Result<Self, String> {
+        match value {
+            Some(Value::String(s)) => match s.as_str() {
+                "created" => Ok(ListinvoicesIndex::CREATED),
+                "updated" => Ok(ListinvoicesIndex::UPDATED),
+                _ => Err(format!("Invalid value for ListinvoicesIndex: {}", s)),
+            },
+            _ => Err("Invalid value for ListinvoicesIndex".to_string()),
+        }
+    }
+}
+
+impl FromOptionValue for ListsendpaysStatus {
+    fn from_option_value(value: &Option<Value>) -> Result<Self, String> {
+        match value {
+            Some(Value::String(s)) => match s.as_str() {
+                "pending" => Ok(ListsendpaysStatus::PENDING),
+                "complete" => Ok(ListsendpaysStatus::COMPLETE),
+                "failed" => Ok(ListsendpaysStatus::FAILED),
+                _ => Err(format!("Invalid value for ListsendpaysStatus: {}", s)),
+            },
+            _ => Err("Invalid value for ListsendpaysStatus".to_string()),
+        }
+    }
+}
+
+impl FromOptionValue for SendonionFirst_hop {
+    fn from_option_value(value: &Option<Value>) -> Result<Self, String> {
+        match value {
+            Some(Value::Object(map)) => {
+                let id = map
+                    .get("id")
+                    .ok_or_else(|| "id is missing".to_string())
+                    .and_then(|v| {
+                        PublicKey::from_option_value(&Some(v.clone()))
+                            .map_err(|_| "Failed to parse id".to_string())
+                    })?;
+
+                let amount_msat = map
+                    .get("amount_msat")
+                    .ok_or_else(|| "amount_msat is missing".to_string())
+                    .and_then(|v| {
+                        Amount::from_option_value(&Some(v.clone()))
+                            .map_err(|_| "Failed to parse amount_msat".to_string())
+                    })?;
+
+                let delay = map
+                    .get("delay")
+                    .ok_or_else(|| "delay is missing".to_string())
+                    .and_then(|v| {
+                        u16::from_option_value(&Some(v.clone()))
+                            .map_err(|_| "Failed to parse delay".to_string())
+                    })?;
+
+                Ok(SendonionFirst_hop {
+                    id,
+                    amount_msat,
+                    delay,
+                })
+            }
+            _ => Err("Invalid value for SendonionFirst_hop".to_string()),
+        }
+    }
+}
+
 #[allow(private_bounds)]
 // Generalized get_option_as function
 pub fn get_option_as<T: FromOptionValue>(
@@ -416,19 +507,4 @@ pub fn get_option_as<T: FromOptionValue>(
     options_map
         .get(key)
         .and_then(|v| T::from_option_value(v).ok())
-}
-
-pub trait AddressString {
-    fn to_string(&self) -> String;
-}
-
-impl AddressString for NewaddrAddresstype {
-    fn to_string(&self) -> String {
-        (match self {
-            NewaddrAddresstype::BECH32 => "bech32",
-            NewaddrAddresstype::P2TR => "p2tr",
-            NewaddrAddresstype::ALL => "all",
-        })
-        .to_string()
-    }
 }

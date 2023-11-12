@@ -67,6 +67,10 @@ enum Command {
     ClnDelInvoice,
     ClnInvoice,
     ClnListDatastore,
+    ClnListInvoices,
+    ClnSendOnion,
+    ClnListSendPays,
+    ClnListTransactions,
     Unknown,
 }
 
@@ -97,6 +101,10 @@ impl From<&str> for Command {
             "cln_delinvoice" => Self::ClnDelInvoice,
             "cln_invoice" => Self::ClnInvoice,
             "cln_listdatastore" => Self::ClnListDatastore,
+            "cln_listinvoices" => Self::ClnListInvoices,
+            "cln_sendonion" => Self::ClnSendOnion,
+            "cln_listsendpays" => Self::ClnListSendPays,
+            "cln_listtransactions" => Self::ClnListTransactions,
             _ => Self::Unknown,
         }
     }
@@ -160,6 +168,10 @@ impl EventHandler for Botimint {
             cln::delinvoice::register,
             cln::invoice::register,
             cln::listdatastore::register,
+            cln::listinvoices::register,
+            cln::sendonion::register,
+            cln::listsendpays::register,
+            cln::listtransactions::register,
         ];
 
         for command in commands.iter() {
@@ -223,7 +235,19 @@ impl Botimint {
                 cln::listdatastore::run(&command_data.options, &self.cln_client).await
             }
             Command::ClnInvoice => cln::invoice::run(&command_data.options, &self.cln_client).await,
-            _ => "Unknown command".to_string(),
+            Command::ClnListInvoices => {
+                cln::listinvoices::run(&command_data.options, &self.cln_client).await
+            }
+            Command::ClnSendOnion => {
+                cln::sendonion::run(&command_data.options, &self.cln_client).await
+            }
+            Command::ClnListSendPays => {
+                cln::listsendpays::run(&command_data.options, &self.cln_client).await
+            }
+            Command::ClnListTransactions => {
+                cln::listtransactions::run(&command_data.options, &self.cln_client).await
+            }
+            Command::Unknown => "Unknown command".to_string(),
         }
     }
 }

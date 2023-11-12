@@ -18,10 +18,14 @@ pub mod invoice;
 pub mod listchannels;
 pub mod listdatastore;
 pub mod listfunds;
+pub mod listinvoices;
 pub mod listpeers;
+pub mod listsendpays;
+pub mod listtransactions;
 pub mod newaddr;
 pub mod pay;
 pub mod ping;
+pub mod sendonion;
 pub mod sendpay;
 pub mod withdraw;
 
