@@ -9,22 +9,16 @@ use fedimint_wallet_client::WalletClientGen;
 
 use crate::CONFIG;
 
-pub struct Fedimint {
-    pub client: ClientArc,
-}
+pub async fn new_fm() -> Result<ClientArc> {
+    let federation_info = FederationInfo::from_invite_code(CONFIG.invite_code.clone()).await?;
+    let mut client_builder = fedimint_client::Client::builder();
+    client_builder.with_module(WalletClientGen(None));
+    client_builder.with_module(MintClientGen);
+    client_builder.with_module(LightningClientGen);
+    client_builder.with_database(MemDatabase::new());
+    client_builder.with_primary_module(1);
+    client_builder.with_federation_info(federation_info);
+    let client_res = client_builder.build(CONFIG.root_secret.clone()).await?;
 
-impl Fedimint {
-    pub async fn new() -> Result<Self> {
-        let federation_info = FederationInfo::from_invite_code(CONFIG.invite_code.clone()).await?;
-        let mut client_builder = fedimint_client::Client::builder();
-        client_builder.with_module(WalletClientGen(None));
-        client_builder.with_module(MintClientGen);
-        client_builder.with_module(LightningClientGen);
-        client_builder.with_database(MemDatabase::new());
-        client_builder.with_primary_module(1);
-        client_builder.with_federation_info(federation_info);
-        let client_res = client_builder.build(CONFIG.root_secret.clone()).await?;
-
-        Ok(Fedimint { client: client_res })
-    }
+    Ok(client_res)
 }

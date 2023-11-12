@@ -1,9 +1,9 @@
 use botimint::Botimint;
-use fedimint_local::Fedimint;
 use serenity::model::prelude::GuildId;
 use serenity::prelude::GatewayIntents;
 use serenity::Client;
 
+use crate::fedimint_local::new_fm;
 use crate::lightning::new_cln;
 
 #[macro_use]
@@ -34,11 +34,8 @@ async fn main() -> anyhow::Result<()> {
     let reqwest_client = reqwest::Client::new();
     tracing::info!("Created new Reqwest HTTP client");
 
-    let fm_client = Fedimint::new().await?;
-    tracing::info!(
-        "Connected to Fedimint: {:?}",
-        fm_client.client.federation_id()
-    );
+    let fm_client = new_fm().await?;
+    tracing::info!("Connected to Fedimint: {:?}", fm_client.federation_id());
 
     // Set gateway intents, which decides what events the bot will be notified about
     let intents = GatewayIntents::GUILD_MESSAGES

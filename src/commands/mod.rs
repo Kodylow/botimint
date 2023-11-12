@@ -7,6 +7,13 @@ use serde_json::Value;
 use serenity::model::prelude::application_command::CommandDataOption;
 use serenity::model::prelude::command::CommandOptionType;
 
+pub enum CommandGroup {
+    ClnCommand,
+    FedimintCommand,
+    CustomCommand,
+    Unknown,
+}
+
 pub struct CommandOptionInfo {
     pub name: &'static str,
     pub description: &'static str,
