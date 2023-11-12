@@ -23,6 +23,7 @@ pub mod fundchannel;
 pub mod get_connection_string;
 pub mod info;
 pub mod invoice;
+pub mod keysend;
 pub mod listchannels;
 pub mod listdatastore;
 pub mod listfunds;
@@ -72,6 +73,8 @@ pub enum ClnCommand {
     ClnWaitAnyInvoice,
     ClnWaitInvoice,
     ClnWaitSendPay,
+    ClnWithdraw,
+    ClnKeySend,
     Unknown,
 }
 
@@ -108,6 +111,8 @@ impl From<&str> for ClnCommand {
             "cln_waitanyinvoice" => Self::ClnWaitAnyInvoice,
             "cln_waitinvoice" => Self::ClnWaitInvoice,
             "cln_waitsendpay" => Self::ClnWaitSendPay,
+            "cln_withdraw" => Self::ClnWithdraw,
+            "cln_keysend" => Self::ClnKeySend,
             _ => Self::Unknown,
         }
     }
@@ -145,6 +150,8 @@ pub async fn ready(ctx: &Context) {
         waitanyinvoice::register,
         waitinvoice::register,
         waitsendpay::register,
+        withdraw::register,
+        keysend::register,
     ];
 
     for command in commands {
@@ -194,6 +201,8 @@ pub async fn handle_run(
         }
         ClnCommand::ClnWaitInvoice => waitinvoice::run(&command_data.options, cln_client).await,
         ClnCommand::ClnWaitSendPay => waitsendpay::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnWithdraw => withdraw::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnKeySend => keysend::run(&command_data.options, cln_client).await,
         ClnCommand::Unknown => format!("Unknown command: {}", command_name),
     }
 }

@@ -7,7 +7,8 @@ use cln_rpc::model::requests::{
     NewaddrAddresstype, SendonionFirst_hop, SendpayRoute,
 };
 use cln_rpc::primitives::{
-    Amount, AmountOrAll, AmountOrAny, Feerate, Outpoint, PublicKey, Secret, Sha256, ShortChannelId,
+    Amount, AmountOrAll, AmountOrAny, Feerate, Outpoint, PublicKey, Routehint, RoutehintList,
+    Routehop, Secret, Sha256, ShortChannelId, TlvEntry, TlvStream,
 };
 use serde_json::Value;
 
@@ -494,6 +495,154 @@ impl FromOptionValue for SendonionFirst_hop {
                 })
             }
             _ => Err("Invalid value for SendonionFirst_hop".to_string()),
+        }
+    }
+}
+
+impl FromOptionValue for RoutehintList {
+    fn from_option_value(value: &Option<Value>) -> Result<Self, String> {
+        match value {
+            Some(Value::Array(arr)) => {
+                let mut hints = Vec::new();
+                for val in arr {
+                    let hint = Routehint::from_option_value(&Some(val.clone()))
+                        .map_err(|_| "Failed to parse Routehint".to_string())?;
+                    hints.push(hint);
+                }
+                Ok(RoutehintList { hints })
+            }
+            _ => Err("Invalid value for RoutehintList".to_string()),
+        }
+    }
+}
+
+impl FromOptionValue for TlvEntry {
+    fn from_option_value(value: &Option<Value>) -> Result<Self, String> {
+        match value {
+            Some(Value::Object(map)) => {
+                let typ = map
+                    .get("typ")
+                    .ok_or_else(|| "typ is missing".to_string())
+                    .and_then(|v| {
+                        u64::from_option_value(&Some(v.clone()))
+                            .map_err(|_| "Failed to parse typ".to_string())
+                    })?;
+
+                let value = map
+                    .get("value")
+                    .ok_or_else(|| "value is missing".to_string())
+                    .and_then(|v| {
+                        Vec::<u8>::from_option_value(&Some(v.clone()))
+                            .map_err(|_| "Failed to parse value".to_string())
+                    })?;
+
+                Ok(TlvEntry { typ, value })
+            }
+            _ => Err("Invalid value for TlvEntry".to_string()),
+        }
+    }
+}
+
+impl FromOptionValue for TlvStream {
+    fn from_option_value(value: &Option<Value>) -> Result<Self, String> {
+        match value {
+            Some(Value::Array(arr)) => {
+                let mut entries = Vec::new();
+                for val in arr {
+                    let entry = TlvEntry::from_option_value(&Some(val.clone()))
+                        .map_err(|_| "Failed to parse TlvEntry".to_string())?;
+                    entries.push(entry);
+                }
+                Ok(TlvStream { entries })
+            }
+            _ => Err("Invalid value for TlvStream".to_string()),
+        }
+    }
+}
+
+impl FromOptionValue for Vec<u8> {
+    fn from_option_value(value: &Option<Value>) -> Result<Self, String> {
+        match value {
+            Some(Value::String(s)) => {
+                let bytes =
+                    hex::decode(s).map_err(|_| "Failed to decode hex string".to_string())?;
+                Ok(bytes)
+            }
+            _ => Err("Invalid value for Vec<u8>".to_string()),
+        }
+    }
+}
+
+impl FromOptionValue for Routehop {
+    fn from_option_value(value: &Option<Value>) -> Result<Self, String> {
+        match value {
+            Some(Value::Object(map)) => {
+                let id = map
+                    .get("pubkey")
+                    .ok_or_else(|| "pubkey is missing".to_string())
+                    .and_then(|v| {
+                        PublicKey::from_option_value(&Some(v.clone()))
+                            .map_err(|_| "Failed to parse pubkey".to_string())
+                    })?;
+
+                let scid = map
+                    .get("short_channel_id")
+                    .ok_or_else(|| "short_channel_id is missing".to_string())
+                    .and_then(|v| {
+                        ShortChannelId::from_option_value(&Some(v.clone()))
+                            .map_err(|_| "Failed to parse short_channel_id".to_string())
+                    })?;
+
+                let feebase = map
+                    .get("fee_base_msat")
+                    .ok_or_else(|| "fee_base_msat is missing".to_string())
+                    .and_then(|v| {
+                        Amount::from_option_value(&Some(v.clone()))
+                            .map_err(|_| "Failed to parse fee_base_msat".to_string())
+                    })?;
+
+                let feeprop = map
+                    .get("fee_proportional_millionths")
+                    .ok_or_else(|| "fee_proportional_millionths is missing".to_string())
+                    .and_then(|v| {
+                        u32::from_option_value(&Some(v.clone()))
+                            .map_err(|_| "Failed to parse fee_proportional_millionths".to_string())
+                    })?;
+
+                let expirydelta = map
+                    .get("cltv_expiry_delta")
+                    .ok_or_else(|| "cltv_expiry_delta is missing".to_string())
+                    .and_then(|v| {
+                        u16::from_option_value(&Some(v.clone()))
+                            .map_err(|_| "Failed to parse cltv_expiry_delta".to_string())
+                    })?;
+
+                Ok(Routehop {
+                    id,
+                    scid,
+                    feebase,
+                    feeprop,
+                    expirydelta,
+                })
+            }
+            _ => Err("Invalid value for Routehop".to_string()),
+        }
+    }
+}
+
+impl FromOptionValue for Routehint {
+    fn from_option_value(value: &Option<Value>) -> Result<Self, String> {
+        match value {
+            Some(Value::Array(arr)) => {
+                let mut hops = Vec::new();
+                for val in arr {
+                    let hop = Routehop::from_option_value(&Some(val.clone()))
+                        .map_err(|_| "Failed to parse Routehop".to_string())?;
+                    hops.push(hop);
+                }
+                Ok(Routehint { hops })
+            }
+            _ => Err("Invalid value for Routehint".to_string()),
         }
     }
 }
