@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::str::FromStr;
 
 use anyhow::Result;
-use cln_rpc::model::requests::{NewaddrAddresstype, SendpayRoute};
+use cln_rpc::model::requests::{CreateonionHops, DatastoreMode, NewaddrAddresstype, SendpayRoute};
 use cln_rpc::primitives::{
     Amount, AmountOrAll, Feerate, Outpoint, PublicKey, Secret, Sha256, ShortChannelId,
 };
@@ -251,6 +251,28 @@ where
     }
 }
 
+impl FromOptionValue for Outpoint {
+    fn from_option_value(value: &Option<Value>) -> Result<Self, String> {
+        match value {
+            Some(Value::String(s)) => {
+                let parts: Vec<&str> = s.split(':').collect();
+                if parts.len() != 2 {
+                    return Err("Invalid outpoint format".to_string());
+                }
+
+                let txid = Sha256::from_str(parts[0])
+                    .map_err(|_| format!("Failed to parse txid {} as Sha256", parts[0]))?;
+                let vout = parts[1]
+                    .parse::<u32>()
+                    .map_err(|_| "Failed to parse vout as u32".to_string())?;
+
+                Ok(Outpoint { txid, outnum: vout })
+            }
+            _ => Err("Invalid value for Outpoint".to_string()),
+        }
+    }
+}
+
 impl FromOptionValue for Vec<Outpoint> {
     fn from_option_value(value: &Option<Value>) -> Result<Self, String> {
         match value {
@@ -290,6 +312,72 @@ impl FromOptionValue for Feerate {
             .and_then(|v| v.as_str())
             .map(|v| Feerate::try_from(v).unwrap())
             .ok_or_else(|| "Failed to parse as FeeRate".to_string())
+    }
+}
+
+impl FromOptionValue for Vec<Feerate> {
+    fn from_option_value(value: &Option<Value>) -> Result<Self, String> {
+        match value {
+            Some(Value::Array(arr)) => {
+                let mut feerates = Vec::new();
+                for val in arr {
+                    if let Value::String(s) = val {
+                        let feerate = Feerate::try_from(s.as_str())
+                            .map_err(|_| "Failed to parse Feerate".to_string())?;
+                        feerates.push(feerate);
+                    } else {
+                        return Err("Invalid value for Vec<Feerate>".to_string());
+                    }
+                }
+                Ok(feerates)
+            }
+            _ => Err("Invalid value for Vec<Feerate>".to_string()),
+        }
+    }
+}
+
+impl FromOptionValue for DatastoreMode {
+    fn from_option_value(value: &Option<Value>) -> Result<Self, String> {
+        match value {
+            Some(Value::String(s)) => match s.as_str() {
+                "must-create" => Ok(DatastoreMode::MUST_CREATE),
+                "must-replace" => Ok(DatastoreMode::MUST_REPLACE),
+                "create-or-replace" => Ok(DatastoreMode::CREATE_OR_REPLACE),
+                "must-append" => Ok(DatastoreMode::MUST_APPEND),
+                "create-or-append" => Ok(DatastoreMode::CREATE_OR_APPEND),
+                _ => Err(format!("Invalid value for DatastoreMode: {}", s)),
+            },
+            _ => Err("Invalid value for DatastoreMode".to_string()),
+        }
+    }
+}
+
+impl FromOptionValue for Vec<CreateonionHops> {
+    fn from_option_value(value: &Option<Value>) -> Result<Self, String> {
+        match value {
+            Some(Value::Array(arr)) => {
+                let mut hops = Vec::new();
+                for val in arr {
+                    if let Value::Object(map) = val {
+                        let pubkey = map
+                            .get("pubkey")
+                            .and_then(|v| v.as_str())
+                            .and_then(|s| PublicKey::from_str(s).ok())
+                            .ok_or_else(|| "Failed to parse pubkey".to_string())?;
+                        let payload = map
+                            .get("payload")
+                            .and_then(|v| v.as_str())
+                            .map(|s| s.to_string())
+                            .ok_or_else(|| "Failed to parse payload".to_string())?;
+                        hops.push(CreateonionHops { pubkey, payload });
+                    } else {
+                        return Err("Invalid value for Vec<CreateonionHops>".to_string());
+                    }
+                }
+                Ok(hops)
+            }
+            _ => Err("Invalid value for Vec<CreateonionHops>".to_string()),
+        }
     }
 }
 

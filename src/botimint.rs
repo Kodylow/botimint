@@ -57,6 +57,12 @@ enum Command {
     ClnPing,
     ClnListChannels,
     ClnAddGossip,
+    ClnAutoClean,
+    ClnCheckMessage,
+    ClnClose,
+    ClnDatastore,
+    ClnCreateOnion,
+    ClnDelDatastore,
     Unknown,
 }
 
@@ -64,7 +70,7 @@ impl From<&str> for Command {
     fn from(s: &str) -> Self {
         match s {
             "ping" => Self::Ping,
-            "federation_id" => Self::FederationId,
+            "fm_federation_id" => Self::FederationId,
             "cln_info" => Self::ClnInfo,
             "cln_listpeers" => Self::ClnListPeers,
             "cln_listfunds" => Self::ClnListFunds,
@@ -77,6 +83,12 @@ impl From<&str> for Command {
             "cln_ping" => Self::ClnPing,
             "cln_listchannels" => Self::ClnListChannels,
             "cln_addgossip" => Self::ClnAddGossip,
+            "cln_autoclean" => Self::ClnAutoClean,
+            "cln_checkmessage" => Self::ClnCheckMessage,
+            "cln_close" => Self::ClnClose,
+            "cln_datastore" => Self::ClnDatastore,
+            "cln_createonion" => Self::ClnCreateOnion,
+            "cln_deldatastore" => Self::ClnDelDatastore,
             _ => Self::Unknown,
         }
     }
@@ -114,20 +126,33 @@ impl EventHandler for Botimint {
 
     async fn ready(&self, ctx: Context, ready: Ready) {
         info!("{} is connected!", ready.user.name);
-        create_and_log_command(&ctx.http, ping::register).await;
-        create_and_log_command(&ctx.http, fm::id::register).await;
-        create_and_log_command(&ctx.http, cln::info::register).await;
-        create_and_log_command(&ctx.http, cln::listpeers::register).await;
-        create_and_log_command(&ctx.http, cln::listfunds::register).await;
-        create_and_log_command(&ctx.http, cln::connect::register).await;
-        create_and_log_command(&ctx.http, cln::newaddr::register).await;
-        create_and_log_command(&ctx.http, cln::createinvoice::register).await;
-        create_and_log_command(&ctx.http, cln::fundchannel::register).await;
-        create_and_log_command(&ctx.http, cln::sendpay::register).await;
-        create_and_log_command(&ctx.http, cln::pay::register).await;
-        create_and_log_command(&ctx.http, cln::ping::register).await;
-        create_and_log_command(&ctx.http, cln::listchannels::register).await;
-        create_and_log_command(&ctx.http, cln::addgossip::register).await;
+
+        let commands = [
+            ping::register,
+            fm::id::register,
+            cln::info::register,
+            cln::listpeers::register,
+            cln::listfunds::register,
+            cln::connect::register,
+            cln::newaddr::register,
+            cln::createinvoice::register,
+            cln::fundchannel::register,
+            cln::sendpay::register,
+            cln::pay::register,
+            cln::ping::register,
+            cln::listchannels::register,
+            cln::addgossip::register,
+            cln::autoclean::register,
+            cln::checkmessage::register,
+            cln::close::register,
+            cln::datastore::register,
+            cln::createonion::register,
+            cln::deldatastore::register,
+        ];
+
+        for command in commands.iter() {
+            create_and_log_command(&ctx.http, *command).await;
+        }
     }
 }
 
@@ -160,7 +185,23 @@ impl Botimint {
             Command::ClnAddGossip => {
                 cln::addgossip::run(&command_data.options, &self.cln_client).await
             }
-            Command::Unknown => "not implemented :(".to_string(),
+            Command::ClnAutoClean => {
+                cln::autoclean::run(&command_data.options, &self.cln_client).await
+            }
+            Command::ClnCheckMessage => {
+                cln::checkmessage::run(&command_data.options, &self.cln_client).await
+            }
+            Command::ClnClose => cln::close::run(&command_data.options, &self.cln_client).await,
+            Command::ClnDatastore => {
+                cln::datastore::run(&command_data.options, &self.cln_client).await
+            }
+            Command::ClnCreateOnion => {
+                cln::createonion::run(&command_data.options, &self.cln_client).await
+            }
+            Command::ClnDelDatastore => {
+                cln::deldatastore::run(&command_data.options, &self.cln_client).await
+            }
+            _ => "Unknown command".to_string(),
         }
     }
 }

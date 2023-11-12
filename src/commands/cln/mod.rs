@@ -1,8 +1,16 @@
 use serde_json::json;
 
+use super::Command;
+
 pub mod addgossip;
+pub mod autoclean;
+pub mod checkmessage;
+pub mod close;
 pub mod connect;
 pub mod createinvoice;
+pub mod createonion;
+pub mod datastore;
+pub mod deldatastore;
 pub mod fundchannel;
 pub mod get_connection_string;
 pub mod info;
