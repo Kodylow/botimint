@@ -10,6 +10,7 @@ use tokio::sync::Mutex;
 use tracing::{error, info};
 
 use crate::commands::{cln, fm, ping};
+use crate::utils::discord_utils::create_and_log_command;
 
 // Botimint Structure
 #[allow(dead_code)]
@@ -79,5 +80,7 @@ impl EventHandler for Botimint {
 
         cln::ready(&ctx).await;
         fm::ready(&ctx).await;
+        // get rid of this once we have more commands
+        create_and_log_command(&ctx.http, ping::register).await;
     }
 }
