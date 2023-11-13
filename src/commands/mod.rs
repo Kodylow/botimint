@@ -1,6 +1,6 @@
 pub mod cln;
+pub mod custom;
 pub mod fm;
-pub mod ping;
 use std::collections::HashMap;
 
 use serde_json::Value;

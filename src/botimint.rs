@@ -9,30 +9,19 @@ use serenity::prelude::*;
 use tokio::sync::Mutex;
 use tracing::{error, info};
 
-use crate::commands::{cln, fm, ping};
-use crate::utils::discord_utils::create_and_log_command;
+use crate::commands::{cln, custom, fm};
 
 // Botimint Structure
-#[allow(dead_code)]
 pub struct Botimint {
-    reqwest_client: reqwest::Client,
     cln_client: Arc<Mutex<ClnRpc>>,
     fm_client: ClientArc,
-    guild_id: GuildId,
 }
 
 impl Botimint {
-    pub fn new(
-        reqwest_client: reqwest::Client,
-        cln_client: Arc<Mutex<ClnRpc>>,
-        fm_client: ClientArc,
-        guild_id: GuildId,
-    ) -> Self {
+    pub fn new(cln_client: Arc<Mutex<ClnRpc>>, fm_client: ClientArc) -> Self {
         Self {
-            reqwest_client,
             cln_client,
             fm_client,
-            guild_id,
         }
     }
 }
@@ -51,7 +40,7 @@ impl EventHandler for Botimint {
                 name if name.starts_with("fm_") => {
                     fm::handle_run(name, &command.data, &self.fm_client).await
                 }
-                _ => ping::run(),
+                _ => custom::handle_run(&command.data.name, &command.data).await,
             };
 
             if let Err(why) = command
@@ -80,7 +69,6 @@ impl EventHandler for Botimint {
 
         cln::ready(&ctx).await;
         fm::ready(&ctx).await;
-        // get rid of this once we have more commands
-        create_and_log_command(&ctx.http, ping::register).await;
+        custom::ready(&ctx).await;
     }
 }
