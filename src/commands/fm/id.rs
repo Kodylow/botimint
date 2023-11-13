@@ -1,33 +1,15 @@
+use fedimint_client::ClientArc;
 use serenity::builder::CreateApplicationCommand;
-use serenity::model::prelude::command::CommandOptionType;
-use serenity::model::prelude::interaction::application_command::{
-    CommandDataOption, CommandDataOptionValue,
-};
+use serenity::model::prelude::interaction::application_command::CommandDataOption;
 
-pub fn run(options: &[CommandDataOption]) -> String {
-    let option = options
-        .first()
-        .expect("Expected user option")
-        .resolved
-        .as_ref()
-        .expect("Expected user object");
+pub async fn run(_options: &[CommandDataOption], fm_client: &ClientArc) -> String {
+    let federation_id = fm_client.federation_id();
 
-    if let CommandDataOptionValue::User(user, _member) = option {
-        format!("{}'s id is {}", user.tag(), user.id)
-    } else {
-        "Please provide a valid user".to_string()
-    }
+    format!("Your federation id is: {}", federation_id)
 }
 
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
     command
-        .name("id")
-        .description("Get a user id")
-        .create_option(|option| {
-            option
-                .name("id")
-                .description("The user to lookup")
-                .kind(CommandOptionType::User)
-                .required(true)
-        })
+        .name("fm_federation_id")
+        .description("Get the federation id")
 }

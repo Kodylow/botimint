@@ -31,10 +31,10 @@ pub async fn ready(ctx: &Context) {
 pub async fn handle_run(
     command_name: &str,
     command_data: &CommandData,
-    _fm_client: &ClientArc,
+    fm_client: &ClientArc,
 ) -> String {
     match FmCommand::from(command_name) {
-        FmCommand::Id => id::run(&command_data.options),
+        FmCommand::Id => id::run(&command_data.options, fm_client).await,
         FmCommand::Unknown => format!("Unknown command: {}", command_name),
     }
 }
