@@ -22,7 +22,7 @@ macro_rules! impl_from_option_value {
     ($type:ty, $body:expr) => {
         impl FromOptionValue for $type {
             fn from_option_value(value: &Option<Value>) -> Result<Self, String> {
-                $body(value)
+                $body(value.clone())
             }
         }
     };
@@ -34,7 +34,7 @@ fn err_msg<T: ToString + std::fmt::Display>(detail: T) -> String {
 }
 
 // Helper function for parsing strings
-fn parse_string(value: &Option<Value>) -> Result<String, String> {
+fn parse_string(value: Option<Value>) -> Result<String, String> {
     match value {
         Some(Value::String(s)) => Ok(s.clone()),
         _ => Err(err_msg("String")),
@@ -54,25 +54,25 @@ fn parse_vec<T: FromOptionValue>(value: &Option<Value>) -> Result<Vec<T>, String
 
 // Implement FromOptionValue for various types using the macro
 impl_from_option_value!(bool, |value| {
-    bool::from_option_value(value).map_err(|_| err_msg("bool"))
+    bool::from_option_value(&value).map_err(|_| err_msg("bool"))
 });
 impl_from_option_value!(u8, |value| {
-    u8::from_option_value(value).map_err(|_| err_msg("u8"))
+    u8::from_option_value(&value).map_err(|_| err_msg("u8"))
 });
 impl_from_option_value!(u16, |value| {
-    u16::from_option_value(value).map_err(|_| err_msg("u16"))
+    u16::from_option_value(&value).map_err(|_| err_msg("u16"))
 });
 impl_from_option_value!(u32, |value| {
-    u32::from_option_value(value).map_err(|_| err_msg("u32"))
+    u32::from_option_value(&value).map_err(|_| err_msg("u32"))
 });
 impl_from_option_value!(u64, |value| {
-    u64::from_option_value(value).map_err(|_| err_msg("u64"))
+    u64::from_option_value(&value).map_err(|_| err_msg("u64"))
 });
 impl_from_option_value!(f32, |value| {
-    f32::from_option_value(value).map_err(|_| err_msg("f32"))
+    f32::from_option_value(&value).map_err(|_| err_msg("f32"))
 });
 impl_from_option_value!(f64, |value| {
-    f64::from_option_value(value).map_err(|_| err_msg("f64"))
+    f64::from_option_value(&value).map_err(|_| err_msg("f64"))
 });
 impl_from_option_value!(String, parse_string);
 impl_from_option_value!(PublicKey, |value| {
@@ -144,7 +144,7 @@ impl_from_option_value!(Outpoint, |value| {
     })
 });
 
-impl_from_option_value!(SendpayRoute, |&value| {
+impl_from_option_value!(SendpayRoute, |value| {
     match value {
         Some(Value::Object(map)) => {
             let amount_msat = map
@@ -190,7 +190,7 @@ impl_from_option_value!(SendpayRoute, |&value| {
     }
 });
 
-impl_from_option_value!(AmountOrAll, |&value| {
+impl_from_option_value!(AmountOrAll, |value| {
     match value {
         Some(Value::String(s)) if s == "all" => Ok(AmountOrAll::All),
         Some(_) => parse_amount(&value, AmountOrAll::Amount),
@@ -198,7 +198,7 @@ impl_from_option_value!(AmountOrAll, |&value| {
     }
 });
 
-impl_from_option_value!(AmountOrAny, |&value| {
+impl_from_option_value!(AmountOrAny, |value| {
     match value {
         Some(Value::String(s)) if s == "any" => Ok(AmountOrAny::Any),
         Some(_) => parse_amount(&value, AmountOrAny::Amount),
@@ -206,7 +206,7 @@ impl_from_option_value!(AmountOrAny, |&value| {
     }
 });
 
-impl_from_option_value!(NewaddrAddresstype, |&value| {
+impl_from_option_value!(NewaddrAddresstype, |value| {
     match value {
         Some(Value::String(s)) if s == "bech32" => Ok(NewaddrAddresstype::BECH32),
         Some(Value::String(s)) if s == "p2tr" => Ok(NewaddrAddresstype::P2TR),
@@ -216,7 +216,7 @@ impl_from_option_value!(NewaddrAddresstype, |&value| {
     }
 });
 
-impl_from_option_value!(Feerate, |&value| {
+impl_from_option_value!(Feerate, |value| {
     match value {
         Some(Value::String(s)) => {
             Feerate::try_from(s.as_str()).map_err(|_| "Failed to parse as FeeRate".to_string())
@@ -225,7 +225,7 @@ impl_from_option_value!(Feerate, |&value| {
     }
 });
 
-impl_from_option_value!(DatastoreMode, |&value| {
+impl_from_option_value!(DatastoreMode, |value| {
     match value {
         Some(Value::String(s)) => match s.as_str() {
             "must-create" => Ok(DatastoreMode::MUST_CREATE),
@@ -239,7 +239,7 @@ impl_from_option_value!(DatastoreMode, |&value| {
     }
 });
 
-impl_from_option_value!(Vec<CreateonionHops>, |&value| {
+impl_from_option_value!(Vec<CreateonionHops>, |value| {
     match value {
         Some(Value::Array(arr)) => {
             let mut hops = Vec::new();
@@ -265,7 +265,7 @@ impl_from_option_value!(Vec<CreateonionHops>, |&value| {
         _ => Err("Invalid value for Vec<CreateonionHops>".to_string()),
     }
 });
-impl_from_option_value!(DelinvoiceStatus, |&value| {
+impl_from_option_value!(DelinvoiceStatus, |value| {
     match value {
         Some(Value::String(s)) => match s.as_str() {
             "paid" => Ok(DelinvoiceStatus::PAID),
@@ -277,7 +277,7 @@ impl_from_option_value!(DelinvoiceStatus, |&value| {
     }
 });
 
-impl_from_option_value!(ListinvoicesIndex, |&value| {
+impl_from_option_value!(ListinvoicesIndex, |value| {
     match value {
         Some(Value::String(s)) => match s.as_str() {
             "created" => Ok(ListinvoicesIndex::CREATED),
@@ -288,7 +288,7 @@ impl_from_option_value!(ListinvoicesIndex, |&value| {
     }
 });
 
-impl_from_option_value!(ListsendpaysStatus, |&value| {
+impl_from_option_value!(ListsendpaysStatus, |value| {
     match value {
         Some(Value::String(s)) => match s.as_str() {
             "pending" => Ok(ListsendpaysStatus::PENDING),
@@ -300,7 +300,7 @@ impl_from_option_value!(ListsendpaysStatus, |&value| {
     }
 });
 
-impl_from_option_value!(SendonionFirst_hop, |&value| {
+impl_from_option_value!(SendonionFirst_hop, |value| {
     match value {
         Some(Value::Object(map)) => {
             let id = map
@@ -336,7 +336,7 @@ impl_from_option_value!(SendonionFirst_hop, |&value| {
         _ => Err("Invalid value for SendonionFirst_hop".to_string()),
     }
 });
-impl_from_option_value!(RoutehintList, |&value| {
+impl_from_option_value!(RoutehintList, |value| {
     match value {
         Some(Value::Array(arr)) => {
             let mut hints = Vec::new();
@@ -351,7 +351,7 @@ impl_from_option_value!(RoutehintList, |&value| {
     }
 });
 
-impl_from_option_value!(TlvEntry, |&value| {
+impl_from_option_value!(TlvEntry, |value| {
     match value {
         Some(Value::Object(map)) => {
             let typ = map
@@ -376,7 +376,7 @@ impl_from_option_value!(TlvEntry, |&value| {
     }
 });
 
-impl_from_option_value!(TlvStream, |&value| {
+impl_from_option_value!(TlvStream, |value| {
     match value {
         Some(Value::Array(arr)) => {
             let mut entries = Vec::new();
@@ -391,7 +391,7 @@ impl_from_option_value!(TlvStream, |&value| {
     }
 });
 
-impl_from_option_value!(Routehop, |&value| {
+impl_from_option_value!(Routehop, |value| {
     match value {
         Some(Value::Object(map)) => {
             let id = map
@@ -446,7 +446,7 @@ impl_from_option_value!(Routehop, |&value| {
     }
 });
 
-impl_from_option_value!(Routehint, |&value| {
+impl_from_option_value!(Routehint, |value| {
     match value {
         Some(Value::Array(arr)) => {
             let mut hops = Vec::new();
@@ -461,24 +461,26 @@ impl_from_option_value!(Routehint, |&value| {
     }
 });
 
-impl_from_option_value!(Vec<bool>, |value| parse_vec(value));
-impl_from_option_value!(Vec<u8>, |value| parse_vec(value));
-impl_from_option_value!(Vec<u16>, |value| parse_vec(value));
-impl_from_option_value!(Vec<u32>, |value| parse_vec(value));
-impl_from_option_value!(Vec<u64>, |value| parse_vec(value));
-impl_from_option_value!(Vec<f32>, |value| parse_vec(value));
-impl_from_option_value!(Vec<f64>, |value| parse_vec(value));
-impl_from_option_value!(Vec<String>, |value| parse_vec(value));
-impl_from_option_value!(Vec<PublicKey>, |value| parse_vec(value));
-impl_from_option_value!(Vec<Secret>, |value| parse_vec(value));
-impl_from_option_value!(Vec<Sha256>, |value| parse_vec(value));
-impl_from_option_value!(Vec<ShortChannelId>, |value| parse_vec(value));
-impl_from_option_value!(Vec<Amount>, |value| parse_vec(value));
-impl_from_option_value!(Vec<OutputDesc>, |value| parse_vec(value));
-impl_from_option_value!(Vec<Outpoint>, |value| parse_vec(value));
-impl_from_option_value!(Vec<SendpayRoute>, |value| parse_vec(value));
-impl_from_option_value!(Vec<AmountOrAll>, |value| parse_vec(value));
-impl_from_option_value!(Vec<AmountOrAny>, |value| parse_vec(value));
+impl_from_option_value!(Vec<bool>, |value| parse_vec(&value));
+impl_from_option_value!(Vec<u8>, |value| parse_vec(&value));
+impl_from_option_value!(Vec<u16>, |value| parse_vec(&value));
+impl_from_option_value!(Vec<u32>, |value| parse_vec(&value));
+impl_from_option_value!(Vec<u64>, |value| parse_vec(&value));
+impl_from_option_value!(Vec<f32>, |value| parse_vec(&value));
+impl_from_option_value!(Vec<f64>, |value| parse_vec(&value));
+impl_from_option_value!(Vec<String>, |value| parse_vec(&value));
+impl_from_option_value!(Vec<PublicKey>, |value| parse_vec(&value));
+impl_from_option_value!(Vec<Secret>, |value| parse_vec(&value));
+impl_from_option_value!(Vec<Sha256>, |value| parse_vec(&value));
+impl_from_option_value!(Vec<ShortChannelId>, |value| parse_vec(&value));
+impl_from_option_value!(Vec<Amount>, |value| parse_vec(&value));
+impl_from_option_value!(Vec<OutputDesc>, |value| parse_vec(&value));
+impl_from_option_value!(Vec<Outpoint>, |value| parse_vec(&value));
+impl_from_option_value!(Vec<SendpayRoute>, |value| parse_vec(&value));
+impl_from_option_value!(Vec<AmountOrAll>, |value| parse_vec(&value));
+impl_from_option_value!(Vec<AmountOrAny>, |value| parse_vec(&value));
+impl_from_option_value!(Vec<NewaddrAddresstype>, |value| parse_vec(&value));
+impl_from_option_value!(Vec<Feerate>, |value| parse_vec(&value));
 
 // Generalized get_option_as function remains the same
 pub fn get_option_as<T: FromOptionValue>(
