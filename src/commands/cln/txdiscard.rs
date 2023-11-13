@@ -1,0 +1,48 @@
+use std::sync::Arc;
+
+use cln_rpc::ClnRpc;
+use cln_rpc::Request::TxDiscard;
+use serenity::builder::CreateApplicationCommand;
+use serenity::model::prelude::application_command::CommandDataOption;
+use serenity::model::prelude::command::CommandOptionType;
+use tokio::sync::Mutex;
+
+use super::format_json;
+use crate::commands::{discord_command_options_to_map, CommandOptionInfo};
+use crate::utils::get_option_as::get_option_as;
+
+pub async fn run(options: &[CommandDataOption], cln_client: &Arc<Mutex<ClnRpc>>) -> String {
+    let options_map = discord_command_options_to_map(options);
+    let txid: String = get_option_as(&options_map, "txid").unwrap();
+
+    let req = cln_rpc::model::requests::TxdiscardRequest { txid };
+
+    match cln_client.lock().await.call(TxDiscard(req)).await {
+        Ok(res) => format_json(res),
+        Err(e) => format!("Error: {}", e),
+    }
+}
+
+pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
+    let options = vec![CommandOptionInfo {
+        name: "txid",
+        description: "The transaction id to discard",
+        kind: CommandOptionType::String,
+        required: true,
+    }];
+
+    command
+        .name("cln_txdiscard")
+        .description("Abandon a transaction, release inputs");
+
+    for opt_info in options {
+        command.create_option(|opt| {
+            opt.name(opt_info.name)
+                .description(opt_info.description)
+                .kind(opt_info.kind)
+                .required(opt_info.required)
+        });
+    }
+
+    command
+}

@@ -40,6 +40,9 @@ pub mod sendonion;
 pub mod sendpay;
 pub mod sendpsbt;
 pub mod signpsbt;
+pub mod txdiscard;
+pub mod txprepare;
+pub mod txsend;
 pub mod utxopsbt;
 pub mod waitanyinvoice;
 pub mod waitinvoice;
@@ -83,6 +86,9 @@ pub enum ClnCommand {
     ClnSendPsbt,
     ClnSignPsbt,
     ClnUtxoPsbt,
+    ClnTxDiscard,
+    ClnTxPrepare,
+    ClnTxSend,
     Unknown,
 }
 
@@ -125,6 +131,9 @@ impl From<&str> for ClnCommand {
             "cln_sendpsbt" => Self::ClnSendPsbt,
             "cln_signpsbt" => Self::ClnSignPsbt,
             "cln_utxopsbt" => Self::ClnUtxoPsbt,
+            "cln_txdiscard" => Self::ClnTxDiscard,
+            "cln_txprepare" => Self::ClnTxPrepare,
+            "cln_txsend" => Self::ClnTxSend,
             _ => Self::Unknown,
         }
     }
@@ -168,6 +177,9 @@ pub async fn ready(ctx: &Context) {
         sendpsbt::register,
         signpsbt::register,
         utxopsbt::register,
+        txdiscard::register,
+        txprepare::register,
+        txsend::register,
     ];
 
     for command in commands {
@@ -223,6 +235,9 @@ pub async fn handle_run(
         ClnCommand::ClnSendPsbt => sendpsbt::run(&command_data.options, cln_client).await,
         ClnCommand::ClnSignPsbt => signpsbt::run(&command_data.options, cln_client).await,
         ClnCommand::ClnUtxoPsbt => utxopsbt::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnTxDiscard => txdiscard::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnTxPrepare => txprepare::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnTxSend => txsend::run(&command_data.options, cln_client).await,
         ClnCommand::Unknown => format!("Unknown command: {}", command_name),
     }
 }
