@@ -16,6 +16,8 @@ pub mod connect;
 pub mod createinvoice;
 pub mod createonion;
 pub mod datastore;
+pub mod decode;
+pub mod decodepay;
 pub mod deldatastore;
 pub mod delexpiredinvoice;
 pub mod delinvoice;
@@ -93,6 +95,8 @@ pub enum ClnCommand {
     ClnTxSend,
     ClnListClosedChannels,
     ClnListPeerChannels,
+    ClnDecode,
+    ClnDecodePay,
     Unknown,
 }
 
@@ -140,6 +144,8 @@ impl From<&str> for ClnCommand {
             "cln_txsend" => Self::ClnTxSend,
             "cln_listclosedchannels" => Self::ClnListClosedChannels,
             "cln_listpeerchannels" => Self::ClnListPeerChannels,
+            "cln_decode" => Self::ClnDecode,
+            "cln_decodepay" => Self::ClnDecodePay,
             _ => Self::Unknown,
         }
     }
@@ -188,6 +194,8 @@ pub async fn ready(ctx: &Context) {
         txsend::register,
         listclosedchannels::register,
         listpeerchannels::register,
+        decode::register,
+        decodepay::register,
     ];
 
     for command in commands {
@@ -252,6 +260,8 @@ pub async fn handle_run(
         ClnCommand::ClnListPeerChannels => {
             listpeerchannels::run(&command_data.options, cln_client).await
         }
+        ClnCommand::ClnDecode => decode::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnDecodePay => decodepay::run(&command_data.options, cln_client).await,
         ClnCommand::Unknown => format!("Unknown command: {}", command_name),
     }
 }
