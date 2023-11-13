@@ -21,18 +21,24 @@ pub mod decodepay;
 pub mod deldatastore;
 pub mod delexpiredinvoice;
 pub mod delinvoice;
+pub mod disconnect;
+pub mod feerates;
 pub mod fundchannel;
 pub mod fundpsbt;
 pub mod get_connection_string;
+pub mod getroute;
 pub mod info;
 pub mod invoice;
 pub mod keysend;
 pub mod listchannels;
 pub mod listclosedchannels;
 pub mod listdatastore;
+pub mod listforwards;
 pub mod listfunds;
+pub mod listhtlcs;
 pub mod listinvoices;
 pub mod listnodes;
+pub mod listpays;
 pub mod listpeerchannels;
 pub mod listpeers;
 pub mod listsendpays;
@@ -97,6 +103,12 @@ pub enum ClnCommand {
     ClnListPeerChannels,
     ClnDecode,
     ClnDecodePay,
+    ClnDisconnect,
+    ClnFeerates,
+    ClnGetRoute,
+    ClnListForwards,
+    ClnListHtlcs,
+    ClnListPays,
     Unknown,
 }
 
@@ -146,6 +158,12 @@ impl From<&str> for ClnCommand {
             "cln_listpeerchannels" => Self::ClnListPeerChannels,
             "cln_decode" => Self::ClnDecode,
             "cln_decodepay" => Self::ClnDecodePay,
+            "cln_disconnect" => Self::ClnDisconnect,
+            "cln_feerates" => Self::ClnFeerates,
+            "cln_getroute" => Self::ClnGetRoute,
+            "cln_listforwards" => Self::ClnListForwards,
+            "cln_listhtlcs" => Self::ClnListHtlcs,
+
             _ => Self::Unknown,
         }
     }
@@ -196,6 +214,8 @@ pub async fn ready(ctx: &Context) {
         listpeerchannels::register,
         decode::register,
         decodepay::register,
+        disconnect::register,
+        feerates::register,
     ];
 
     for command in commands {
@@ -262,6 +282,12 @@ pub async fn handle_run(
         }
         ClnCommand::ClnDecode => decode::run(&command_data.options, cln_client).await,
         ClnCommand::ClnDecodePay => decodepay::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnDisconnect => disconnect::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnFeerates => feerates::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnGetRoute => getroute::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnListForwards => listforwards::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnListHtlcs => listhtlcs::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnListPays => listpays::run(&command_data.options, cln_client).await,
         ClnCommand::Unknown => format!("Unknown command: {}", command_name),
     }
 }

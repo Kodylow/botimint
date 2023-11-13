@@ -3,8 +3,9 @@ use std::str::FromStr;
 
 use anyhow::Result;
 use cln_rpc::model::requests::{
-    CreateonionHops, DatastoreMode, DelinvoiceStatus, ListinvoicesIndex, ListsendpaysStatus,
-    NewaddrAddresstype, SendonionFirst_hop, SendpayRoute,
+    CreateonionHops, DatastoreMode, DelinvoiceStatus, FeeratesStyle, ListforwardsStatus,
+    ListinvoicesIndex, ListpaysStatus, ListsendpaysStatus, NewaddrAddresstype, SendonionFirst_hop,
+    SendpayRoute,
 };
 use cln_rpc::primitives::{
     Amount, AmountOrAll, AmountOrAny, Feerate, Outpoint, OutputDesc, PublicKey, Routehint,
@@ -458,6 +459,41 @@ impl_from_option_value!(Routehint, |value| {
             Ok(Routehint { hops })
         }
         _ => Err("Invalid value for Routehint".to_string()),
+    }
+});
+
+impl_from_option_value!(FeeratesStyle, |value| {
+    match value {
+        Some(Value::String(s)) => match s.as_str() {
+            "perkb" => Ok(FeeratesStyle::PERKB),
+            "perkw" => Ok(FeeratesStyle::PERKW),
+            _ => Err(format!("Invalid value for FeeratesStyle: {}", s)),
+        },
+        _ => Err("Invalid value for FeeratesStyle".to_string()),
+    }
+});
+
+impl_from_option_value!(ListpaysStatus, |value| {
+    match value {
+        Some(Value::String(s)) => match s.as_str() {
+            "pending" => Ok(ListpaysStatus::PENDING),
+            "complete" => Ok(ListpaysStatus::COMPLETE),
+            "failed" => Ok(ListpaysStatus::FAILED),
+            _ => Err(format!("Invalid value for ListpaysStatus: {}", s)),
+        },
+        _ => Err("Invalid value for ListpaysStatus".to_string()),
+    }
+});
+impl_from_option_value!(ListforwardsStatus, |value| {
+    match value {
+        Some(Value::String(s)) => match s.as_str() {
+            "offered" => Ok(ListforwardsStatus::OFFERED),
+            "settled" => Ok(ListforwardsStatus::SETTLED),
+            "local_failed" => Ok(ListforwardsStatus::LOCAL_FAILED),
+            "failed" => Ok(ListforwardsStatus::FAILED),
+            _ => Err(format!("Invalid value for ListforwardsStatus: {}", s)),
+        },
+        _ => Err("Invalid value for ListforwardsStatus".to_string()),
     }
 });
 
