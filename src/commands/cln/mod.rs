@@ -46,10 +46,18 @@ pub mod listtransactions;
 pub mod newaddr;
 pub mod pay;
 pub mod ping;
+pub mod preapproveinvoice;
+pub mod preapprovekeysend;
+pub mod sendcustommsg;
 pub mod sendonion;
 pub mod sendpay;
 pub mod sendpsbt;
+pub mod setchannel;
+pub mod signinvoice;
+pub mod signmessage;
 pub mod signpsbt;
+pub mod staticbackup;
+pub mod stop;
 pub mod txdiscard;
 pub mod txprepare;
 pub mod txsend;
@@ -109,6 +117,14 @@ pub enum ClnCommand {
     ClnListForwards,
     ClnListHtlcs,
     ClnListPays,
+    ClnStop,
+    ClnPreApproveInvoice,
+    ClnPreApproveKeySend,
+    ClnSendCustomMsg,
+    ClnSetChannel,
+    ClnSignInvoice,
+    ClnSignMessage,
+    ClnStaticBackup,
     Unknown,
 }
 
@@ -163,7 +179,15 @@ impl From<&str> for ClnCommand {
             "cln_getroute" => Self::ClnGetRoute,
             "cln_listforwards" => Self::ClnListForwards,
             "cln_listhtlcs" => Self::ClnListHtlcs,
-
+            "cln_listpays" => Self::ClnListPays,
+            "cln_stop" => Self::ClnStop,
+            "cln_preapproveinvoice" => Self::ClnPreApproveInvoice,
+            "cln_preapprovekeysend" => Self::ClnPreApproveKeySend,
+            "cln_sendcustommsg" => Self::ClnSendCustomMsg,
+            "cln_setchannel" => Self::ClnSetChannel,
+            "cln_signinvoice" => Self::ClnSignInvoice,
+            "cln_signmessage" => Self::ClnSignMessage,
+            "cln_staticbackup" => Self::ClnStaticBackup,
             _ => Self::Unknown,
         }
     }
@@ -216,6 +240,18 @@ pub async fn ready(ctx: &Context) {
         decodepay::register,
         disconnect::register,
         feerates::register,
+        getroute::register,
+        listforwards::register,
+        listhtlcs::register,
+        listpays::register,
+        stop::register,
+        preapproveinvoice::register,
+        preapprovekeysend::register,
+        sendcustommsg::register,
+        setchannel::register,
+        signinvoice::register,
+        signmessage::register,
+        staticbackup::register,
     ];
 
     for command in commands {
@@ -288,6 +324,18 @@ pub async fn handle_run(
         ClnCommand::ClnListForwards => listforwards::run(&command_data.options, cln_client).await,
         ClnCommand::ClnListHtlcs => listhtlcs::run(&command_data.options, cln_client).await,
         ClnCommand::ClnListPays => listpays::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnStop => stop::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnPreApproveInvoice => {
+            preapproveinvoice::run(&command_data.options, cln_client).await
+        }
+        ClnCommand::ClnPreApproveKeySend => {
+            preapprovekeysend::run(&command_data.options, cln_client).await
+        }
+        ClnCommand::ClnSendCustomMsg => sendcustommsg::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnSetChannel => setchannel::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnSignInvoice => signinvoice::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnSignMessage => signmessage::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnStaticBackup => staticbackup::run(&command_data.options, cln_client).await,
         ClnCommand::Unknown => format!("Unknown command: {}", command_name),
     }
 }
