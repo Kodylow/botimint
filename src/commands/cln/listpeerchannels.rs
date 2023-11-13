@@ -9,14 +9,14 @@ use serenity::model::prelude::interaction::application_command::CommandDataOptio
 use tokio::sync::Mutex;
 
 use super::format_json;
-use crate::commands::discord_command_options_to_map;
+use crate::commands::{discord_command_options_to_map, CommandOptionInfo};
 use crate::utils::get_option_as::get_option_as;
 
 pub async fn run(options: &[CommandDataOption], cln_client: &Arc<Mutex<ClnRpc>>) -> String {
     let options_map = discord_command_options_to_map(options);
     let id: Option<PublicKey> = get_option_as(&options_map, "id");
 
-    let req = cln_rpc::model::requests::ListPeerChannelsRequest { id };
+    let req = cln_rpc::model::requests::ListpeerchannelsRequest { id };
     let res = cln_client
         .lock()
         .await
@@ -47,4 +47,6 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
                 .required(opt_info.required)
         });
     }
+
+    command
 }

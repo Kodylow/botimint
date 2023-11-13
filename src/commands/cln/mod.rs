@@ -26,10 +26,12 @@ pub mod info;
 pub mod invoice;
 pub mod keysend;
 pub mod listchannels;
+pub mod listclosedchannels;
 pub mod listdatastore;
 pub mod listfunds;
 pub mod listinvoices;
 pub mod listnodes;
+pub mod listpeerchannels;
 pub mod listpeers;
 pub mod listsendpays;
 pub mod listtransactions;
@@ -89,6 +91,8 @@ pub enum ClnCommand {
     ClnTxDiscard,
     ClnTxPrepare,
     ClnTxSend,
+    ClnListClosedChannels,
+    ClnListPeerChannels,
     Unknown,
 }
 
@@ -134,6 +138,8 @@ impl From<&str> for ClnCommand {
             "cln_txdiscard" => Self::ClnTxDiscard,
             "cln_txprepare" => Self::ClnTxPrepare,
             "cln_txsend" => Self::ClnTxSend,
+            "cln_listclosedchannels" => Self::ClnListClosedChannels,
+            "cln_listpeerchannels" => Self::ClnListPeerChannels,
             _ => Self::Unknown,
         }
     }
@@ -180,6 +186,8 @@ pub async fn ready(ctx: &Context) {
         txdiscard::register,
         txprepare::register,
         txsend::register,
+        listclosedchannels::register,
+        listpeerchannels::register,
     ];
 
     for command in commands {
@@ -238,6 +246,12 @@ pub async fn handle_run(
         ClnCommand::ClnTxDiscard => txdiscard::run(&command_data.options, cln_client).await,
         ClnCommand::ClnTxPrepare => txprepare::run(&command_data.options, cln_client).await,
         ClnCommand::ClnTxSend => txsend::run(&command_data.options, cln_client).await,
+        ClnCommand::ClnListClosedChannels => {
+            listclosedchannels::run(&command_data.options, cln_client).await
+        }
+        ClnCommand::ClnListPeerChannels => {
+            listpeerchannels::run(&command_data.options, cln_client).await
+        }
         ClnCommand::Unknown => format!("Unknown command: {}", command_name),
     }
 }
