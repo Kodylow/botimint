@@ -7,10 +7,16 @@ use fedimint_client::secret::{PlainRootSecretStrategy, RootSecretStrategy};
 use fedimint_core::api::InviteCode;
 use tracing::info;
 
+lazy_static::lazy_static! {
+    pub static ref CONFIG: Config =
+        Config::from_env().expect("Failed to load config from environment");
+}
+
 pub struct Config {
     pub guild_id: String,
     pub discord_client_token: String,
     pub cln_rpc_path: PathBuf,
+    pub fm_db_path: PathBuf,
     pub invite_code: InviteCode,
     pub root_secret: DerivableSecret,
 }
@@ -32,6 +38,9 @@ impl Config {
         };
         info!("Loaded FEDERATION_INVITE_CODE");
 
+        let fm_db_path = PathBuf::from(env::var("FM_DB_PATH")?);
+        info!("Loaded FM_DB_PATH");
+
         // Read the secret from the environment
         let secret = env::var("SECRET_KEY").expect("SECRET_KEY must be set");
         info!("Loaded SECRET_KEY");
@@ -43,6 +52,7 @@ impl Config {
             guild_id,
             discord_client_token,
             cln_rpc_path,
+            fm_db_path,
             invite_code,
             root_secret,
         })

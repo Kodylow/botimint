@@ -19,11 +19,12 @@ dotenv = "0.15.0"
 tracing-subscriber = "0.3.17"
 cln-rpc = "0.1.6"
 lightning-invoice = "0.26.0"
-fedimint-client = { git = "https://github.com/fedimint/fedimint", branch = "master" }
-fedimint-core = { git = "https://github.com/fedimint/fedimint", branch = "master" }
-fedimint-wallet-client = { git = "https://github.com/fedimint/fedimint", branch = "master" }
-fedimint-mint-client = { git = "https://github.com/fedimint/fedimint", branch = "master" }
-fedimint-ln-client = { git = "https://github.com/fedimint/fedimint", branch = "master" }
+fedimint-client = "0.2.1"
+fedimint-core = "0.2.1"
+fedimint-wallet-client = "0.2.1"
+fedimint-mint-client = "0.2.1"
+fedimint-ln-client = "0.2.1"
+fedimint-rocksdb = "0.2.1"
 lazy_static = "1.4.0"
 serde_json = "1.0.108"
 regex = "1.10.2"
@@ -31,9 +32,9 @@ hex = "0.4.3"
 uuid = { version = "1.5.0", features = ["serde", "v4"] }
 
 
-[patch.crates-io]
-secp256k1-zkp = { git = "https://github.com/dpc/rust-secp256k1-zkp/", branch = "sanket-pr" }
-ring = { git = "https://github.com/dpc/ring", rev = "5493e7e76d0d8fb1d3cbb0be9c4944700741b802" }
+# [patch.crates-io]
+# secp256k1-zkp = { git = "https://github.com/dpc/rust-secp256k1-zkp/", branch = "sanket-pr" }
+# ring = { git = "https://github.com/dpc/ring", rev = "5493e7e76d0d8fb1d3cbb0be9c4944700741b802" }
 
 [profile]
 

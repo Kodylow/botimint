@@ -3,21 +3,15 @@ use botimint::Botimint;
 use serenity::prelude::GatewayIntents;
 use serenity::Client;
 
-use crate::fedimint_local::new_fm;
+use crate::config::CONFIG;
 use crate::lightning::new_cln;
-
-#[macro_use]
-extern crate lazy_static;
-
-lazy_static! {
-    pub static ref CONFIG: config::Config = config::Config::from_env().unwrap();
-}
+use crate::state::load_fedimint_client;
 
 mod botimint;
 mod commands;
 mod config;
-mod fedimint_local;
 mod lightning;
+mod state;
 mod utils;
 
 #[tokio::main]
@@ -34,7 +28,7 @@ async fn main() -> anyhow::Result<()> {
     // let reqwest_client = reqwest::Client::new();
     // tracing::info!("Created new Reqwest HTTP client");
 
-    let fm_client = new_fm().await?;
+    let fm_client = load_fedimint_client().await?;
     tracing::info!("Connected to Fedimint: {:?}", fm_client.federation_id());
 
     // Set gateway intents, which decides what events the bot will be notified about
