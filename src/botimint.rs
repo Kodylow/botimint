@@ -9,7 +9,7 @@ use serenity::prelude::*;
 use tokio::sync::Mutex;
 use tracing::{error, info};
 
-use crate::commands::{cln, custom, fm};
+use crate::commands::{cln, custom, fed};
 
 // Botimint Structure
 pub struct Botimint {
@@ -38,7 +38,7 @@ impl EventHandler for Botimint {
                     cln::handle_run(name, &command.data, &self.cln_client).await
                 }
                 name if name.starts_with("fm_") => {
-                    fm::handle_run(name, &command.data, &self.fm_client).await
+                    fed::handle_run(name, &command.data, &self.fm_client).await
                 }
                 _ => custom::handle_run(&command.data.name, &command.data).await,
             };
@@ -68,7 +68,7 @@ impl EventHandler for Botimint {
         info!("{} is connected!", ready.user.name);
 
         cln::ready(&ctx).await;
-        fm::ready(&ctx).await;
+        fed::ready(&ctx).await;
         custom::ready(&ctx).await;
     }
 }
