@@ -10,6 +10,9 @@ pub mod discover_version;
 pub mod id;
 pub mod info;
 pub mod list_operations;
+pub mod ln;
+pub mod mint;
+pub mod wallet;
 
 pub enum FmCommand {
     Backup,
