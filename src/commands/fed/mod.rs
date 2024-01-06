@@ -24,7 +24,7 @@ impl From<&str> for FmCommand {
 }
 
 pub async fn ready(ctx: &Context) {
-    let commands = vec![id::register];
+    let commands = vec![id::register, info::register];
 
     for command in commands {
         create_and_log_command(&ctx.http, command).await;

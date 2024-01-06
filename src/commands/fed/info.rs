@@ -9,6 +9,8 @@ use serde::Serialize;
 use serenity::builder::CreateApplicationCommand;
 use serenity::model::application::interaction::application_command::CommandDataOption;
 
+use crate::utils::to_codeblock;
+
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub struct InfoResponse {
@@ -41,7 +43,7 @@ pub async fn run(_options: &[CommandDataOption], fm_client: &ClientArc) -> Strin
         denominations_msat: summary,
     };
 
-    serde_json::to_string_pretty(&response).unwrap()
+    to_codeblock(serde_json::to_string_pretty(&response).unwrap())
 }
 
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
