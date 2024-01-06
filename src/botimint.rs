@@ -3,7 +3,10 @@ use std::sync::Arc;
 use cln_rpc::ClnRpc;
 use fedimint_client::ClientArc;
 use serenity::async_trait;
+use serenity::client::{Context, EventHandler};
 use serenity::model::application::interaction::{Interaction, InteractionResponseType};
+use serenity::model::channel::Message;
+use serenity::model::gateway::Ready;
 use tokio::sync::Mutex;
 use tracing::{error, info};
 
