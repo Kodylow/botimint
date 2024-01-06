@@ -33,6 +33,7 @@ uuid = { version = "1.5.0", features = ["serde", "v4"] }
 time = { version = "0.3.25", features = ["formatting"] }
 futures = "0.3.30"
 bitcoin = "0.29.2"
+lnurl-rs = { version = "0.4.0", features = ["async"], default-features = false }
 
 
 # [patch.crates-io]
