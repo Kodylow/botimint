@@ -7,7 +7,7 @@ use serenity::model::prelude::command::CommandOptionType;
 use serenity::model::prelude::interaction::application_command::CommandDataOption;
 use tokio::sync::Mutex;
 
-use super::format_json;
+use crate::utils::format_json;
 
 pub async fn run(options: &[CommandDataOption], cln_client: &Arc<Mutex<ClnRpc>>) -> String {
     let options_map = crate::commands::discord_command_options_to_map(options);

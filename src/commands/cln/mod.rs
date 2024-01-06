@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use cln_rpc::ClnRpc;
-use serde_json::json;
 use serenity::model::prelude::application_command::CommandData;
 use serenity::prelude::Context;
 use tokio::sync::Mutex;
@@ -338,9 +337,4 @@ pub async fn handle_run(
         ClnCommand::ClnStaticBackup => staticbackup::run(&command_data.options, cln_client).await,
         ClnCommand::Unknown => format!("Unknown command: {}", command_name),
     }
-}
-
-fn format_json(res: cln_rpc::Response) -> String {
-    let data = serde_json::to_string_pretty(&json!(res)).unwrap();
-    format!("```json\n{}\n```", data)
 }
