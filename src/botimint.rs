@@ -4,8 +4,6 @@ use cln_rpc::ClnRpc;
 use fedimint_client::ClientArc;
 use serenity::async_trait;
 use serenity::model::application::interaction::{Interaction, InteractionResponseType};
-use serenity::model::prelude::*;
-use serenity::prelude::*;
 use tokio::sync::Mutex;
 use tracing::{error, info};
 

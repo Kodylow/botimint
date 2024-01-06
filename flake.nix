@@ -1,8 +1,8 @@
 {
-  description = "Botimint: Fedimint Discord Bot";
+  description = "A Fedimint Discord Bot";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.05";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.11";
 
     flakebox = {
       url = "github:rustshop/flakebox";
@@ -15,57 +15,40 @@
   outputs = { self, nixpkgs, flakebox, flake-utils }:
     flake-utils.lib.eachDefaultSystem (system:
       let
-        pkgs = import nixpkgs {
-          inherit system;
-        };
-
+        pkgs = import nixpkgs { inherit system; };
         flakeboxLib = flakebox.lib.${system} { };
-
         rustSrc = flakeboxLib.filterSubPaths {
           root = builtins.path {
-            name = "botimint";
+            name = "fedimint-http";
             path = ./.;
           };
-          paths = [
-            "Cargo.toml"
-            "Cargo.lock"
-            ".cargo"
-            "src"
-          ];
+          paths = [ "Cargo.toml" "Cargo.lock" ".cargo" "src" ];
         };
 
-        outputs =
-          (flakeboxLib.craneMultiBuild { }) (craneLib':
-            let
-              craneLib = (craneLib'.overrideArgs {
-                pname = "flexbox-multibuild";
-                src = rustSrc;
-                nativeBuildInputs = [
-                  pkgs.pkg-config
-                ];
-              });
-            in
-            rec {
-              workspaceDeps = craneLib.buildWorkspaceDepsOnly { };
-              workspaceBuild = craneLib.buildWorkspace {
-                cargoArtifacts = workspaceDeps;
-              };
-              flakebox-tutorial = craneLib.buildPackage { };
+        outputs = (flakeboxLib.craneMultiBuild { }) (craneLib':
+          let
+            craneLib = (craneLib'.overrideArgs {
+              pname = "flexbox-multibuild";
+              src = rustSrc;
             });
-      in
-      {
-        legacyPackages = outputs // { clightning = pkgs.clightning; };
+          in rec {
+            workspaceDeps = craneLib.buildWorkspaceDepsOnly { };
+            workspaceBuild =
+              craneLib.buildWorkspace { cargoArtifacts = workspaceDeps; };
+            bullpen = craneLib.buildPackage { };
+          });
+      in {
+        legacyPackages = outputs;
         devShells = flakeboxLib.mkShells {
-          nativeBuildInputs = [
-            pkgs.pkg-config
-            pkgs.starship
-            pkgs.clightning
-            pkgs.just
-            pkgs.darwin.apple_sdk.frameworks.SystemConfiguration # TODO: remove this once I figure out how to get this without the hack
-          ];
           packages = [ ];
+          buildInputs = [
+            pkgs.just
+            pkgs.starship
+            pkgs.darwin.apple_sdk.frameworks.SystemConfiguration
+            pkgs.pkg-config
+          ];
           shellHook = ''
-              eval "$(starship init bash)"
+            eval "$(starship init bash)"
           '';
         };
       });
