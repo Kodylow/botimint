@@ -21,6 +21,7 @@ pub enum FmCommand {
     Id,
     Info,
     ListOperations,
+    WalletAwaitDeposit,
     Unknown,
 }
 
@@ -33,6 +34,7 @@ impl From<&str> for FmCommand {
             "fm_id" => Self::Id,
             "fm_info" => Self::Info,
             "fm_list_operations" => Self::ListOperations,
+            "fm_wallet_await_deposit" => Self::WalletAwaitDeposit,
             _ => Self::Unknown,
         }
     }
@@ -46,6 +48,7 @@ pub async fn ready(ctx: &Context) {
         id::register,
         info::register,
         list_operations::register,
+        wallet::await_deposit::register,
     ];
 
     for command in commands {
@@ -65,6 +68,9 @@ pub async fn handle_run(
         FmCommand::Id => id::run(&command_data.options, fm_client).await,
         FmCommand::Info => info::run(&command_data.options, fm_client).await,
         FmCommand::ListOperations => list_operations::run(&command_data.options, fm_client).await,
+        FmCommand::WalletAwaitDeposit => {
+            wallet::await_deposit::run(&command_data.options, fm_client).await
+        }
         FmCommand::Unknown => format!("Unknown command: {}", command_name),
     }
 }

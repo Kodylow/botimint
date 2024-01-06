@@ -31,6 +31,7 @@ regex = "1.10.2"
 hex = "0.4.3"
 uuid = { version = "1.5.0", features = ["serde", "v4"] }
 time = { version = "0.3.25", features = ["formatting"] }
+futures = "0.3.30"
 
 
 # [patch.crates-io]
