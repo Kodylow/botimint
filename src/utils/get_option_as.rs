@@ -69,6 +69,9 @@ impl_from_option_value!(u32, |value| {
 impl_from_option_value!(u64, |value| {
     u64::from_option_value(&value).map_err(|_| err_msg("u64"))
 });
+impl_from_option_value!(usize, |value| {
+    usize::from_option_value(&value).map_err(|_| err_msg("f32"))
+});
 impl_from_option_value!(f32, |value| {
     f32::from_option_value(&value).map_err(|_| err_msg("f32"))
 });

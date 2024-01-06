@@ -29,6 +29,7 @@ impl From<&str> for FmCommand {
             "fm_discover_version" => Self::DiscoverVersion,
             "fm_id" => Self::Id,
             "fm_info" => Self::Info,
+            "fm_list_operations" => Self::ListOperations,
             _ => Self::Unknown,
         }
     }
