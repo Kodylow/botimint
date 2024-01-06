@@ -1,104 +1,77 @@
-use crate::{error::AppError, state::AppState};
 use anyhow::anyhow;
-use axum::{extract::State, http::StatusCode, Json};
-use bitcoin::Address;
-use bitcoin_hashes::hex::ToHex;
-use fedimint_core::BitcoinAmountOrAll;
-use fedimint_wallet_client::{WalletClientModule, WithdrawState};
+use axum::extract::State;
+use axum::http::StatusCode;
+use axum::Json;
+use fedimint_core::core::OperationId;
+use fedimint_wallet_client::{DepositState, WalletClientModule};
 use futures::StreamExt;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use tracing::info;
+
+use crate::error::AppError;
+use crate::state::AppState;
 
 #[derive(Debug, Deserialize)]
-pub struct WithdrawRequest {
-    pub address: Address,
-    pub amount_msat: BitcoinAmountOrAll,
+pub struct AwaitDepositRequest {
+    pub operation_id: OperationId,
 }
 
 #[derive(Debug, Serialize)]
-pub struct WithdrawResponse {
-    pub txid: String,
-    pub fees_sat: u64,
+pub struct AwaitDepositResponse {
+    pub status: DepositState,
 }
 
-async fn _withdraw(state: AppState, req: WithdrawRequest) -> Result<WithdrawResponse, AppError> {
-    let wallet_module = state.fm.get_first_module::<WalletClientModule>();
-    let (amount, fees) = match req.amount_msat {
-        // If the amount is "all", then we need to subtract the fees from
-        // the amount we are withdrawing
-        BitcoinAmountOrAll::All => {
-            let balance = bitcoin::Amount::from_sat(state.fm.get_balance().await.msats / 1000);
-            let fees = wallet_module
-                .get_withdraw_fees(req.address.clone(), balance)
-                .await?;
-            let amount = balance.checked_sub(fees.amount());
-            if amount.is_none() {
-                Err(AppError::new(
-                    StatusCode::BAD_REQUEST,
-                    anyhow!("Insufficient balance to pay fees"),
-                ))?;
-            }
-            (amount.unwrap(), fees)
-        }
-        BitcoinAmountOrAll::Amount(amount) => (
-            amount,
-            wallet_module
-                .get_withdraw_fees(req.address.clone(), amount)
-                .await?,
-        ),
-    };
-    let absolute_fees = fees.amount();
-
-    info!("Attempting withdraw with fees: {fees:?}");
-
-    let operation_id = wallet_module
-        .withdraw(req.address, amount, fees, ())
-        .await?;
-
-    let mut updates = wallet_module
-        .subscribe_withdraw_updates(operation_id)
+async fn _await_deposit(
+    state: AppState,
+    req: AwaitDepositRequest,
+) -> Result<AwaitDepositResponse, AppError> {
+    let mut updates = state
+        .fm
+        .get_first_module::<WalletClientModule>()
+        .subscribe_deposit_updates(req.operation_id)
         .await?
         .into_stream();
 
     while let Some(update) = updates.next().await {
-        info!("Update: {update:?}");
-
         match update {
-            WithdrawState::Succeeded(txid) => {
-                return Ok(WithdrawResponse {
-                    txid: txid.to_hex(),
-                    fees_sat: absolute_fees.to_sat(),
-                });
+            DepositState::Confirmed(tx) => {
+                return Ok(AwaitDepositResponse {
+                    status: DepositState::Confirmed(tx),
+                })
             }
-            WithdrawState::Failed(e) => {
+            DepositState::Claimed(tx) => {
+                return Ok(AwaitDepositResponse {
+                    status: DepositState::Claimed(tx),
+                })
+            }
+            DepositState::Failed(reason) => {
                 return Err(AppError::new(
                     StatusCode::INTERNAL_SERVER_ERROR,
-                    anyhow!("Withdraw failed: {:?}", e),
-                ));
+                    anyhow!(reason),
+                ))
             }
-            _ => continue,
-        };
+            _ => {}
+        }
     }
 
     Err(AppError::new(
         StatusCode::INTERNAL_SERVER_ERROR,
-        anyhow!("Update stream ended without outcome"),
+        anyhow!("Unexpected end of stream"),
     ))
 }
 
 pub async fn handle_ws(v: Value, state: AppState) -> Result<Value, AppError> {
     let v = serde_json::from_value(v).unwrap();
-    let withdraw = _withdraw(state, v).await?;
-    let withdraw_json = json!(withdraw);
-    Ok(withdraw_json)
+    let await_deposit = _await_deposit(state, v).await?;
+    let await_deposit_json = json!(await_deposit);
+    Ok(await_deposit_json)
 }
 
 #[axum_macros::debug_handler]
 pub async fn handle_rest(
     State(state): State<AppState>,
-    Json(req): Json<WithdrawRequest>,
-) -> Result<Json<WithdrawResponse>, AppError> {
-    let withdraw = _withdraw(state, req).await?;
-    Ok(Json(withdraw))
+    Json(req): Json<AwaitDepositRequest>,
+) -> Result<Json<AwaitDepositResponse>, AppError> {
+    let await_deposit = _await_deposit(state, req).await?;
+    Ok(Json(await_deposit))
 }

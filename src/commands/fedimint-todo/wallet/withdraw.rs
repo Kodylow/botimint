@@ -1,6 +1,7 @@
-use crate::{error::AppError, state::AppState};
 use anyhow::anyhow;
-use axum::{extract::State, http::StatusCode, Json};
+use axum::extract::State;
+use axum::http::StatusCode;
+use axum::Json;
 use bitcoin::Address;
 use bitcoin_hashes::hex::ToHex;
 use fedimint_core::BitcoinAmountOrAll;
@@ -9,6 +10,9 @@ use futures::StreamExt;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use tracing::info;
+
+use crate::error::AppError;
+use crate::state::AppState;
 
 #[derive(Debug, Deserialize)]
 pub struct WithdrawRequest {

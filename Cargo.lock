@@ -386,6 +386,7 @@ name = "botimint"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "bitcoin 0.29.2",
  "cln-rpc",
  "dotenv",
  "fedimint-client",
