@@ -48,6 +48,6 @@ pub async fn run(_options: &[CommandDataOption], fm_client: &ClientArc) -> Strin
 
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
     command
-        .name("fm_federation_id")
-        .description("Get the federation id")
+        .name("fm_info")
+        .description("Get information about the federation")
 }
