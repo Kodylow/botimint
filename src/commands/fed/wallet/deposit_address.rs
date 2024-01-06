@@ -42,7 +42,7 @@ pub async fn run(options: &[CommandDataOption], fm_client: &ClientArc) -> String
 
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
     let options = vec![CommandOptionInfo {
-        name: "timout",
+        name: "timeout",
         description: "The timeout for the pegin address in seconds",
         kind: CommandOptionType::Integer,
         required: true,
